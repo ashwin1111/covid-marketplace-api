@@ -108,10 +108,17 @@ router.post('/login', async function (req, res) {
                         expiresIn: 604800
                     });
 
+                    var data = {
+                        name: result.rows[0].customer_name,
+                        phno: result.rows[0].customer_phone,
+                        aadhar: result.rows[0].customer_aadhar_num
+                    };
+
                     return res.status(200).send({
                         auth: true,
                         token: token,
-                        msg: 'Login success :)'
+                        msg: 'Login success :)',
+                        data: data
                     });
                 } else {
                     return res.status(404).send({
