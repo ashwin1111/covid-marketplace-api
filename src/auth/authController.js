@@ -48,8 +48,8 @@ router.post('/register', async function (req, res) {
             var pwd = await bcrypt.hashSync(req.body.password, 8);
             var id = await randomize('a0', 6);
             id = 'cid' + id;
-            client.query(`INSERT INTO customer_cred (customer_id, customer_name, customer_email, customer_password, created_at, customer_phone, customer_aadhar_num) 
-            VALUES ($1, $2, $3, $4, now(), $5, $6)`, [id, req.body.name, req.body.email, pwd, req.body.phno, req.body.aadhar], function (err, result) {
+            client.query(`INSERT INTO customer_cred (customer_id, customer_name, customer_email, customer_password, created_at, customer_phone, customer_aadhar_num, verified) 
+            VALUES ($1, $2, $3, $4, now(), $5, $6, '0')`, [id, req.body.name, req.body.email, pwd, req.body.phno, req.body.aadhar], function (err, result) {
                 if (err) {
                     console.log('err in registering user', err);
                     return res.status(500).send({
@@ -99,19 +99,27 @@ router.post('/login', async function (req, res) {
                     token: null,
                     msg: 'Invalid creds'
                 });
-    
-                var token = jwt.sign({
-                    id: result.rows[0].customer_id,
-                    email: result.rows[0].customer_email
-                }, process.env.jwtSecret, {
-                    expiresIn: 604800
-                });
-    
-                return res.status(200).send({
-                    auth: true,
-                    token: token,
-                    msg: 'Login success :)'
-                });
+
+                if (result.rows[0].verified === '1') {
+                    var token = jwt.sign({
+                        id: result.rows[0].customer_id,
+                        email: result.rows[0].customer_email
+                    }, process.env.jwtSecret, {
+                        expiresIn: 604800
+                    });
+
+                    return res.status(200).send({
+                        auth: true,
+                        token: token,
+                        msg: 'Login success :)'
+                    });
+                } else {
+                    return res.status(404).send({
+                        auth: false,
+                        token: null,
+                        msg: 'Account not verified'
+                    });
+                }
             }
         }
     });
