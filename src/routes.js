@@ -10,4 +10,6 @@ app.get('/', (req, res) => {
 
 app.use('/auth', require('./auth/authController'));
 
+app.use('/admin', require('./admin/adminController'));
+
 module.exports = app;
