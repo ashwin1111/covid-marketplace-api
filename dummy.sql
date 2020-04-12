@@ -3,6 +3,7 @@
 -- Heroku Postgres CLI
 -- heroku pg:psql postgresql-convex-88085 --app covid-marketplace
 
+--Create Table queries:
 
 --Admin table:
 
@@ -31,3 +32,12 @@ create table active_market_place_details(active_market_place_details_id text PRI
 --Count Updates table:
 
 create table count_updates(count_update_id text PRIMARY KEY, market_place_id text References market_place_all_details(market_place_id), count INTEGER, created_at timestamp);
+
+--Alter Table queries:
+
+ALTER TABLE customer_cred ALTER COLUMN customer_email SET NOT NULL;
+ALTER TABLE customer_cred ALTER COLUMN customer_phone SET NOT NULL;
+ALTER TABLE customer_cred ALTER COLUMN customer_aadhar_num SET NOT NULL;
+
+
+--Insert Table queries:
