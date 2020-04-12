@@ -1,0 +1,1 @@
+-- use this file to store sql logs like creating a table / view, adding functions, etc..,

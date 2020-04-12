@@ -1,0 +1,19 @@
+api TODO's:
+
+p0 - config env
+p0 - resend verification email
+
+p1 - have a limit to send verification email
+p1 - confirmed account trigger email
+
+p2 - sign up, sign in with google facebook github
+p2 - email verificaton with access token
+
+p3 - refresh tokens
+p3 - rate limiting
+
+
+app TODO's:
+p0 - open a dialog stating session expired
+p1 - guide them with step 1,2,3 or gif...
+p1 - reset / forgot password
