@@ -50,3 +50,5 @@ ALTER table customer_cred ADD CONSTRAINT unique_values UNIQUE (customer_email,cu
 update customer_cred SET verified = '0' where verified is NULL;
 
 --Insert Table queries:
+
+insert into admin_cred values('aid3ijnuw', 'COVID-19' ,'$2a$08$VQOpb70ElK9339vW5.tGuelKZtCzkwIt7zm7jOex6eQ8Y92G9GD62',now()); -- password: 'covid-market-19' userid: 'aid3ijnuw'
