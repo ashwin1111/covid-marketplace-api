@@ -12,4 +12,6 @@ app.use('/auth', require('./auth/authController'));
 
 app.use('/admin', require('./admin/adminController'));
 
+app.use('/user', require('./user/userController'));
+
 module.exports = app;
