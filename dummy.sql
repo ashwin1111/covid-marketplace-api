@@ -39,5 +39,14 @@ ALTER TABLE customer_cred ALTER COLUMN customer_email SET NOT NULL;
 ALTER TABLE customer_cred ALTER COLUMN customer_phone SET NOT NULL;
 ALTER TABLE customer_cred ALTER COLUMN customer_aadhar_num SET NOT NULL;
 
+ALTER TABLE customer_cred ADD COLUMN verified bit;
+
+ALTER TABLE customer_cred alter verified set DEFAULT '0';
+
+ALTER table customer_cred ADD CONSTRAINT unique_values UNIQUE (customer_email,customer_phone,customer_aadhar_num);
+
+--Update Table queries:
+
+update customer_cred SET verified = '0' where verified is NULL;
 
 --Insert Table queries:
