@@ -23,7 +23,7 @@ var jwtToken = require('../auth/jwtToken');
 
 user.get('/MarketPlaces', jwtToken, async function (req, res) {
     const client = await pool().connect();
-    await client.query("SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,(SELECT string_agg(t.time_slot_range, ',') as time_slot_ranges from time_slot as t where t.time_slot_id IN (select regexp_split_to_table(time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=mpad.market_place_id)) from market_place_all_details as mpad where mpad.active_check=$1;", ['1'], function (err, result) {
+    await client.query("SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,(SELECT json_build_object('ids',string_agg(t.time_slot_id,','),'time_slot_ranges', string_agg(t.time_slot_range, ',')) as time_slot from time_slot as t where t.time_slot_id IN (select regexp_split_to_table(time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=mpad.market_place_id)) from market_place_all_details as mpad where mpad.active_check=$1;", ['1'], function (err, result) {
         if (err) {
             console.log('err in retreaving marketplaces', err);
             return res.status(500).send({
@@ -43,5 +43,7 @@ user.get('/MarketPlaces', jwtToken, async function (req, res) {
     });
     client.release();
 });
+
+// user.post('/')
 
 module.exports = user;

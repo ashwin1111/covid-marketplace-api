@@ -47,6 +47,8 @@ ALTER table customer_cred ADD CONSTRAINT unique_values UNIQUE (customer_email,cu
 
 ALTER TABLE market_place_all_details ADD COLUMN market_place_address text;
 
+ALTER Table count_updates ADD COLUMN time_slot_id text REFERENCES time_slot(time_slot_id);
+
 --Update Table queries:
 
 update customer_cred SET verified = '0' where verified is NULL;
@@ -62,11 +64,20 @@ INSERT INTO market_place_all_details (market_place_id,market_palce_name,market_p
 
 --Select / View queries:
 
--- Select Distinct ON (mpad.market_place_id) mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,t.time_slot_range from market_place_all_details as mpad 
--- Left Join time_slot As t ON t.time_slot_id In (select regexp_split_to_table(time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=mpad.market_place_id)
--- where mpad.active_check = '1'
--- GROUP BY mpad.market_place_id,t.time_slot_range;
+--Market-place_details query:
 
---market-place_details query:
+SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,(SELECT json_build_object('ids',string_agg(t.time_slot_id,','),'time_slot_ranges', string_agg(t.time_slot_range, ',')) as time_slot from time_slot as t where t.time_slot_id IN (select regexp_split_to_table(time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=mpad.market_place_id)) from market_place_all_details as mpad where mpad.active_check='1';
 
-SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,(SELECT string_agg(t.time_slot_range, ',') as time_slot_ranges from time_slot as t where t.time_slot_id IN (select regexp_split_to_table(time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=mpad.market_place_id)) from market_place_all_details as mpad where mpad.active_check='1';
+--
+SELECT 
+json_agg(json_build_object('ids',t.time_slot_id,'time_slot_ranges', t.time_slot_range))
+from time_slot as t 
+left join (select regexp_split_to_table(m.time_slot_ids, E',') as time_id, m.customer_max_count as max_cus_count from market_place_all_details as m where m.market_place_id='mpadidb40mu2') as st On st.time_id = t.time_slot_id
+left join  ()
+where st.time_id is NOT NULL AND st.max_cus_count <;
+
+
+left join count_updates as cu ON cu.time_slot_id=t.time_slot_id
+where t.time_slot_id IN (select regexp_split_to_table(time_slot_ids, E',') as time_id 
+                        from market_place_all_details as m 
+                        where m.market_place_id='mpadidjhsdvf');
