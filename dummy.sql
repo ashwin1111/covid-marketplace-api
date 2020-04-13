@@ -61,6 +61,7 @@ ALTER Table count_updates ADD COLUMN time_slot_id text REFERENCES time_slot(time
 
 ALTER table count_updates RENAME COLUMN count to count_on_slot;
 
+ALTER TABLE bookings ADD COLUMN digit_code BIGINT;
 
 --Update Table queries:
 
@@ -75,7 +76,6 @@ insert into admin_cred values('aid3ijnuw', 'COVID-19' ,'$2a$08$VQOpb70ElK9339vW5
 
 INSERT INTO time_slot VALUES ('mpidvhclme','9 AM to 9:30 AM',now()),('mpidd2g6f8','9:30 AM to 10 AM',now()),('mpidblijzd','10 AM to 10:30 AM',now()),('mpidkv1mfa','10:30 AM to 11 AM',now()),('mpidtbbnsm','11 AM to 11:30 AM',now());
 
-INSERT INTO market_place_all_details (market_place_id,market_palce_name,market_place_address,time_slot_ids,customer_max_count,active_check,created_at) values('mpadidjhsdvf','Shoppers Stop','Pollachi complex 1st floor','mpidvhclme,mpidd2g6f8,mpidblijzd,mpidkv1mfa,mpidtbbnsm',30,'1',now()),('mpadidb40mu2','Fossil','Pollachi main road 1st street','mpidvhclme,mpidd2g6f8,mpidblijzd,mpidkv1mfa',10,'1',now());
 
 INSERT INTO count_updates (count_update_id,market_place_id,time_slot_id,count,created_at) values('cuidywhnl2','mpadidjhsdvf','mpidvhclme',0,now()),('cuidpz4s44','mpadidjhsdvf','mpidd2g6f8',0,now()),('cuid7ch7gk','mpadidjhsdvf','mpidblijzd',0,now()),('cuid4bc1jb','mpadidjhsdvf','mpidkv1mfa',0,now()),('cuid57s1d0','mpadidjhsdvf','mpidtbbnsm',0,now()),('cuidqq7pr1','mpadidb40mu2','mpidvhclme',0,now()),('cuid4fespw','mpadidb40mu2','mpidd2g6f8',0,now()),('cuidd45ss3','mpadidb40mu2','mpidblijzd',0,now()),('cuid1qz921','mpadidb40mu2','mpidkv1mfa',0,now());
 --Select / View queries:
@@ -95,6 +95,19 @@ where m.market_place_id='mpadidb40mu2' AND cu.time_slot_id='mpidd2g6f8';
 
 Select tab1.one as pre_booked,tab2.possible_count as remaining_slot from (select count(*) as one from bookings where booking_market_place_id='mpadidb40mu2' AND booking_customer_id='cidgbqx26' AND booking_time_slot_id='mpidkv1mfa' AND created_at::date = '2020-04-13') as tab1,(Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id='mpadidb40mu2' AND cu.time_slot_id= 'mpidkv1mfa') as tab2; where tab1.one != 1 AND tab2.possible_count !=0;
 
-INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,active_check,created_at) values($1,$2,$3,$4,$5,now());
+INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,digital_code,active_check,created_at) values($1,$2,$3,$4,$5,$6,'1',now());
 
- Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id='mpadidb40mu2' AND time_slot_id='mpidd2g6f8' AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id='mpadidb40mu2');
+Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id='mpadidb40mu2' AND time_slot_id='mpidd2g6f8' AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id='mpadidb40mu2');
+
+--admin add market:
+
+INSERT INTO market_place_all_details (market_place_id,market_palce_name,market_place_address,time_slot_ids,customer_max_count,active_check,created_at) values('mpadidjhsdvf','Shoppers Stop','Pollachi complex 1st floor','mpidvhclme,mpidd2g6f8,mpidblijzd,mpidkv1mfa,mpidtbbnsm',30,'1',now()),('mpadidb40mu2','Fossil','Pollachi main road 1st street','mpidvhclme,mpidd2g6f8,mpidblijzd,mpidkv1mfa',10,'1',now());
+
+Select regexp_split_to_table('cuidymab13,cuid7cbs1z,cuidyno5ft,cuid5347k8', E','),m.market_place_id,regexp_split_to_table(m.time_slot_ids, E',') as time_slot_id,'0' as c,now() as t
+from market_place_all_details as m where m.market_place_id='mpadidb40mu2';
+
+INSERT INTO count_updates (count_update_id,market_place_id,time_slot_id,count_on_slot,created_at) 
+Select regexp_split_to_table('cuidbehbzl,cuidx6ywak,cuidcqw3bc', E','),m.market_place_id,regexp_split_to_table(m.time_slot_ids, E',') as time_slot_id,'0' as c,now() as t
+from market_place_all_details as m where m.market_place_id='mpadid8yio8e';
+
+cuidymab13,cuid7cbs1z,cuidyno5ft,cuid5347k8

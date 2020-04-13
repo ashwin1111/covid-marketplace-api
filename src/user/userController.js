@@ -14,11 +14,16 @@ const pool = require('../db/postgres');
 var jwtToken = require('../auth/jwtToken');
 
 // user.get('/suma',async function (req, res){
-//     for (var i=0;i<10;i++){
+//     var ids = 'mpidvhclme,mpidd2g6f8,mpidblijzd,mpidkv1mfa';
+//     var id_arr = ids.split(',');
+//     var send = [];
+//     for (var i=0;i<id_arr.length;i++){
 //         var id = await randomize('a0', 6);
 //         id = 'cuid' + id;
-//         console.log(id);
+//         send.push(id);
+//         console.log(i+1,id);
 //     }
+//     console.log(send.toString());
 // });
 
 user.get('/MarketPlaces', jwtToken, async function (req, res) {
@@ -71,7 +76,8 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                         var id = await randomize('a0', 6);
                         id = 'bid' + id;
                         qr_code = id;
-                        client.query(`INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,active_check,created_at) values($1,$2,$3,$4,$5,'1',now());`, [id, req.token.id, req.body.market_place_id, req.body.time_slot_id, qr_code], async function (err, result) {
+                        var digital = await randomize('0', 6);
+                        client.query(`INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,digital_code,active_check,created_at) values($1,$2,$3,$4,$5,$6,'1',now());`, [id, req.token.id, req.body.market_place_id, req.body.time_slot_id, qr_code,digital], async function (err, result) {
                             if (err) {
                                 console.log('err in booking slot', err);
                                 return res.status(500).send({
@@ -83,6 +89,7 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                                 client.query(`Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id=$1 AND time_slot_id=$2 AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id=$1);`, [req.body.market_place_id, req.body.time_slot_id], async function (err, result) {
                                     return res.status(200).send({
                                         file: id,
+                                        code: digital,
                                         msg: 'Slot booked successfully'
                                     });
                                 });
