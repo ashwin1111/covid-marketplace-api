@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.656.0",
     "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.16.1",
@@ -22,6 +23,7 @@
     "handlebars": "^4.7.2",
     "jsonwebtoken": "^7.4.1",
     "pg": "^7.17.1",
+    "qrcode": "^1.4.4",
     "randomatic": "^3.1.1",
     "sendgrid": "^5.2.3",
     "twilio": "^3.42.1",
