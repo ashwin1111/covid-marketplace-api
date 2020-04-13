@@ -52,7 +52,7 @@ user.post('/book_slot', jwtToken, async function (req, res) {
         });
     }
     const client = await pool().connect();
-    await client.query("Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id=$1 AND cu.time_slot_id=$2;",[req.body.market_place_id,req.body.time_slot_id], function (err, result) {
+    await client.query("Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id=$1 AND cu.time_slot_id=$2;",[req.body.market_place_id,req.body.time_slot_id], async function (err, result) {
         if (err) {
             console.log('err in retreaving possibility', err);
             return res.status(500).send({

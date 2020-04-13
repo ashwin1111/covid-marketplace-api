@@ -87,3 +87,5 @@ SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,(SE
 Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m
 left join count_updates as cu On m.market_place_id=cu.market_place_id
 where m.market_place_id='mpadidb40mu2' AND cu.time_slot_id='mpidd2g6f8';
+
+
