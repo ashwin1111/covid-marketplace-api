@@ -1,3 +1,4 @@
+
 var express = require('express');
 var router = express.Router();
 
@@ -60,7 +61,7 @@ router.post('/register', async function (req, res) {
                 } else {
                     // TODO: discuss add when necessary
                     // sendEmail(req.body.name, id, req.body.email);
-                    let msg = '\nHi ' + req.body.name + ', please enter this 6 digit OTP '+ otp +' in the application to get your account verified\n';
+                    let msg = '\nHi ' + req.body.name + ', please enter this 6 digit OTP ' + otp + ' in the application to get your account verified\n';
                     sendOtp(req.body.phno, msg);
                     return res.status(200).send({
                         msg: 'User registered successfully'
@@ -138,7 +139,7 @@ router.post('/login', async function (req, res) {
 });
 
 // TODO: check on prod due to change in timezones
-router.post('/verify', async function (req, res, next) {
+router.post('/verify', async function (req, res) {
     try {
         const phnno = req.body.phno;
         const otp = req.body.otp;
@@ -165,12 +166,12 @@ router.post('/verify', async function (req, res, next) {
                             msg: 'User verified'
                         });
                     })
-                  } else {
+                } else {
                     console.log('otp expired');
                     return res.status(404).send({
                         msg: 'OTP expired'
                     });
-                  }
+                }
             } else {
                 return res.status(404).send({
                     msg: 'Invalid OTP'
@@ -181,6 +182,51 @@ router.post('/verify', async function (req, res, next) {
     } catch (e) {
         throw (e)
     }
+});
+
+router.post('/resend_otp', async (req, res) => {
+    async function incrementCount (phno) {
+        const client = await pool().connect();
+        await client.query(`update customer_cred set expiry_time = now() + INTERVAL '3 minute' where customer_phone = $1`, [phno], function(err, result) {
+            if (err) {
+                console.log(err);
+            }
+        });
+        await client.query(`insert into resend_otp (phone_num, otp_requested_at) values ($1, now())`, [phno], function(err, result) {
+            if (err) {
+                console.log(err);
+            }
+        });
+        client.release();
+    }
+
+    if (!req.body.phno) {
+        return res.status(403).send({
+            msg: "Bad Payload"
+        });
+    }
+
+    const client = await pool().connect();
+    await client.query('select * from customer_cred where customer_phone = $1 and verified = $2', [req.body.phno, 'otp_pending'], async function (err, result) {
+        if (result.rows[0]) {
+            await client.query('select phone_num, count(*) from resend_otp where phone_num=$1 group by phone_num', [req.body.phno], async function (err, result1) {
+                if (result1.rows[0] && parseInt(result1.rows[0].count) < 6) {
+                    let msg = '\nHi ' + req.body.name + ', please enter this 6 digit OTP ' + result.rows[0].otp + ' in the application to get your account verified\n';
+                    sendOtp(req.body.phno, msg);
+                    incrementCount(req.body.phno);
+                    return res.status(403).send({
+                        msg: "OTP sent successfully"
+                    });
+                } else {
+                    return res.status(403).send({
+                        msg: "Limit exceeded"
+                    });
+                }
+            });
+        }
+    });
+    client.release();
+
 });
 
 module.exports = router;

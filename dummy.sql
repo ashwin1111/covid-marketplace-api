@@ -33,6 +33,10 @@ create table active_market_place_details(active_market_place_details_id text PRI
 
 create table count_updates(count_update_id text PRIMARY KEY, market_place_id text References market_place_all_details(market_place_id), count INTEGER, created_at timestamp);
 
+--resend otp table:
+
+create table resend_otp(phone_num text,otp_requested_at timestamp);
+
 --Alter Table queries:
 
 ALTER TABLE customer_cred ALTER COLUMN customer_email SET NOT NULL;
@@ -64,6 +68,7 @@ update customer_cred SET verified = 'verified' where verified ='1';
 
 update customer_cred SET verified = 'otp_pending' where verified ='0';
 
+
 --Insert Table queries:
 
 insert into admin_cred values('aid3ijnuw', 'COVID-19' ,'$2a$08$VQOpb70ElK9339vW5.tGuelKZtCzkwIt7zm7jOex6eQ8Y92G9GD62',now()); -- password: 'covid-market-19' userid: 'aid3ijnuw'
@@ -88,4 +93,8 @@ Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_pla
 left join count_updates as cu On m.market_place_id=cu.market_place_id
 where m.market_place_id='mpadidb40mu2' AND cu.time_slot_id='mpidd2g6f8';
 
+Select tab1.one as pre_booked,tab2.possible_count as remaining_slot from (select count(*) as one from bookings where booking_market_place_id='mpadidb40mu2' AND booking_customer_id='cidgbqx26' AND booking_time_slot_id='mpidkv1mfa' AND created_at::date = '2020-04-13') as tab1,(Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id='mpadidb40mu2' AND cu.time_slot_id= 'mpidkv1mfa') as tab2; where tab1.one != 1 AND tab2.possible_count !=0;
 
+INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,active_check,created_at) values($1,$2,$3,$4,$5,now());
+
+ Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id='mpadidb40mu2' AND time_slot_id='mpidd2g6f8' AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id='mpadidb40mu2');
