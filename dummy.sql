@@ -110,4 +110,23 @@ INSERT INTO count_updates (count_update_id,market_place_id,time_slot_id,count_on
 Select regexp_split_to_table('cuidbehbzl,cuidx6ywak,cuidcqw3bc', E','),m.market_place_id,regexp_split_to_table(m.time_slot_ids, E',') as time_slot_id,'0' as c,now() as t
 from market_place_all_details as m where m.market_place_id='mpadid8yio8e';
 
-cuidymab13,cuid7cbs1z,cuidyno5ft,cuid5347k8
+--admin market_list:
+
+SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,
+       (SELECT json_agg(json_build_object('id',t.time_slot_id,'time_slot_range', t.time_slot_range)) as time_slot 
+       from time_slot as t 
+       where t.time_slot_id IN (select regexp_split_to_table(time_slot_ids, E',') 
+                                from market_place_all_details as m 
+                                where m.market_place_id=mpad.market_place_id)) as time_data,mpad.customer_max_count,mpad.active_check
+from market_place_all_details as mpad ;
+
+--udpdate market_place:
+
+--update query
+
+--select difference:
+SELECT market.count as market_time_count,updates.count as update_time_count from (Select count(*) from (select regexp_split_to_table(time_slot_ids, E',') as times from market_place_all_details where market_place_id ='mpadidxfi6zd') AS m) AS market,(select count(*) from count_updates where market_place_id = 'mpadidxfi6zd') AS updates;
+
+select * from count_updates as cu where cu.time_slot_id IN (select regexp_split_to_table(m.time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=cu.market_place_id) AND cu.market_place_id='mpadidxfi6zd';
+
+select * from count_updates as cu where cu.time_slot_id NOT IN (select regexp_split_to_table(m.time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=cu.market_place_id) AND cu.market_place_id='mpadidxfi6zd';

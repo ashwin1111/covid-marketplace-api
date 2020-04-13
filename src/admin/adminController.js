@@ -92,13 +92,42 @@ admin.get('/get_time_slots',jwtToken ,async function (req, res){
     client.release();
 });
 
+admin.get('/ALL_MarketPlace_List',jwtToken ,async function (req, res){
+    const client = await pool().connect();
+    await client.query(`SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,
+                               (SELECT json_agg(json_build_object('id',t.time_slot_id,'time_slot_range', t.time_slot_range)) as time_slot 
+                                from time_slot as t 
+                                where t.time_slot_id IN (select regexp_split_to_table(time_slot_ids, E',') 
+                                                        from market_place_all_details as m 
+                                                        where m.market_place_id=mpad.market_place_id)) as time_data,mpad.customer_max_count,mpad.active_check
+                        from market_place_all_details as mpad ;`, function (err, result) {
+        if (err) {
+            console.log('err in retreaving marketplaces', err);
+            return res.status(500).send({
+                msg: 'Internal error / Bad payload'
+            })
+        } else {
+            if (!result.rows[0]) {
+                return res.status(404).send({
+                    msg: "No MarketPalces Till now Added."
+                })
+            } else {
+                return res.status(200).send({
+                    TotalMarketPlaceList: result.rows
+                });
+            }
+        }
+    });
+    client.release();
+});
+
 admin.post('/AddMarketPlaces', jwtToken, async function (req, res) {
     if (!req.body.market_palce_name || !req.body.market_place_address || !req.body.time_slot_ids || !req.body.customer_max_count || !req.body.active_check) {
         return res.status(403).send({
             msg: "Bad payload"
         });
     }
-    console.log(req.token.id);
+    // console.log(req.token.id);
     var id = await randomize('a0', 6);
     mid = 'mpadid' + id;
     const client = await pool().connect();
@@ -118,7 +147,7 @@ admin.post('/AddMarketPlaces', jwtToken, async function (req, res) {
                 send.push(id);
                 // console.log(i+1,id);
             }
-            console.log("send",send);
+            // console.log("send",send);
             client.query(`INSERT INTO count_updates (count_update_id,market_place_id,time_slot_id,count_on_slot,created_at) 
             Select regexp_split_to_table($1, E','),m.market_place_id,regexp_split_to_table(m.time_slot_ids, E',') as time_slot_id,'0' as c,now() as t
             from market_place_all_details as m where m.market_place_id=$2;`, [send.toString(),mid], async function (err, result) {
@@ -128,7 +157,7 @@ admin.post('/AddMarketPlaces', jwtToken, async function (req, res) {
                         msg: 'Internal error / Bad payload'
                     })
                 } else {
-                    console.log("check",result);
+                    // console.log("check",result);
                     if (result.rowCount!=0){
                         return res.status(200).send({
                             msg: "Market-Place Added Successfully :)"
