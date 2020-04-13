@@ -44,6 +44,57 @@ user.get('/MarketPlaces', jwtToken, async function (req, res) {
     client.release();
 });
 
-user.post('/book_slot',)
+user.post('/book_slot', jwtToken, async function (req, res) {
+    // console.log(req.token.id);
+    if (!req.body.market_place_id || !req.body.time_slot_id || !req.token.id) {
+        return res.status(403).send({
+            msg: "Bad payload"
+        });
+    }
+    const client = await pool().connect();
+    await client.query("Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id=$1 AND cu.time_slot_id=$2;",[req.body.market_place_id,req.body.time_slot_id], function (err, result) {
+        if (err) {
+            console.log('err in retreaving possibility', err);
+            return res.status(500).send({
+                msg: 'Internal error / Bad payload'
+            })
+        } else {
+            if (!result.rows[0]) {
+                return res.status(404).send({
+                    msg: "No Market-Place details found with the active status"
+                })
+            } else {
+                if(result.rows[0].possible_count>0){
+                    var id = await randomize('a0', 6);
+                    id = 'cid' + id;
+                    client.query(`INSERT INTO customer_cred (customer_id, customer_name, customer_email, customer_password, created_at, customer_phone, customer_aadhar_num, verified) 
+                    VALUES ($1, $2, $3, $4, now(), $5, $6, '0')`, [id, req.body.name, req.body.email, pwd, req.body.phno, req.body.aadhar], function (err, result) {
+                        if (err) {
+                            console.log('err in registering user', err);
+                            return res.status(500).send({
+                                msg: 'Internal error / Bad payload'
+                            })
+                        } else {
+                            // TODO: discuss add when necessary
+                            // sendEmail(req.body.name, id, req.body.email);
+                            return res.status(200).send({
+                                msg: 'User registered successfully'
+                            });
+                        }
+                    });
+                    return res.status(200).send({
+                        count: result.rows
+                    });
+                }
+                else{
+                    return res.status(200).send({
+                        booking: false,
+                        msg: 'Time slot has Full please choose any other time slot :)'
+                    });
+                }
+            }
+        }
+    });
+});
 
 module.exports = user;

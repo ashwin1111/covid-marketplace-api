@@ -19,6 +19,7 @@ dotenv.config()
 var randomize = require('randomatic');
 
 const pool = require('../db/postgres');
+var sendOtp = require('./otp');
 
 router.post('/register', async function (req, res) {
     // TODO: check whether all are mandatory
@@ -47,9 +48,10 @@ router.post('/register', async function (req, res) {
         } else {
             var pwd = await bcrypt.hashSync(req.body.password, 8);
             var id = await randomize('a0', 6);
+            var otp = await randomize('0', 6);
             id = 'cid' + id;
-            client.query(`INSERT INTO customer_cred (customer_id, customer_name, customer_email, customer_password, created_at, customer_phone, customer_aadhar_num, verified) 
-            VALUES ($1, $2, $3, $4, now(), $5, $6, '0')`, [id, req.body.name, req.body.email, pwd, req.body.phno, req.body.aadhar], function (err, result) {
+            client.query(`INSERT INTO customer_cred (customer_id, customer_name, customer_email, customer_password, created_at, customer_phone, customer_aadhar_num, verified, otp, expiry_time) 
+            VALUES ($1, $2, $3, $4, now(), $5, $6, $7, $8, now() + INTERVAL '3 minute')`, [id, req.body.name, req.body.email, pwd, req.body.phno, req.body.aadhar, 'otp_pending', otp], function (err, result) {
                 if (err) {
                     console.log('err in registering user', err);
                     return res.status(500).send({
@@ -58,6 +60,8 @@ router.post('/register', async function (req, res) {
                 } else {
                     // TODO: discuss add when necessary
                     // sendEmail(req.body.name, id, req.body.email);
+                    let msg = '\nHi ' + req.body.name + ', please enter this 6 digit OTP '+ otp +' in the application to get your account verified\n';
+                    sendOtp(req.body.phno, msg);
                     return res.status(200).send({
                         msg: 'User registered successfully'
                     });
@@ -100,7 +104,7 @@ router.post('/login', async function (req, res) {
                     msg: 'Invalid creds'
                 });
 
-                if (result.rows[0].verified === '1') {
+                if (result.rows[0].verified === 'verified') {
                     var token = jwt.sign({
                         id: result.rows[0].customer_id,
                         email: result.rows[0].customer_email
@@ -108,10 +112,17 @@ router.post('/login', async function (req, res) {
                         expiresIn: 604800
                     });
 
+                    var data = {
+                        name: result.rows[0].customer_name,
+                        phno: result.rows[0].customer_phone,
+                        aadhar: result.rows[0].customer_aadhar_num
+                    };
+
                     return res.status(200).send({
                         auth: true,
                         token: token,
-                        msg: 'Login success :)'
+                        msg: 'Login success :)',
+                        data: data
                     });
                 } else {
                     return res.status(404).send({
@@ -124,6 +135,52 @@ router.post('/login', async function (req, res) {
         }
     });
     client.release();
+});
+
+// TODO: check on prod due to change in timezones
+router.post('/verify', async function (req, res, next) {
+    try {
+        const phnno = req.body.phno;
+        const otp = req.body.otp;
+        const client = await pool().connect();
+        await client.query('select * from customer_cred where customer_phone = $1 and otp = $2', [phnno, otp], async function (err, result) {
+            if (err) {
+                console.log('err in checking otp', err);
+                return res.status(404).send({
+                    msg: 'Internal error'
+                });
+            }
+
+            if (result.rows[0]) {
+                if (new Date(result.rows[0].expiry_time).toUTCString() > new Date().toUTCString()) {
+                    console.log('not expired');
+                    await client.query('update customer_cred set verified = $1 where customer_id = $2', ['verified', result.rows[0].customer_id], async function (err, result) {
+                        if (err) {
+                            console.log('err in updating user to verified', err);
+                            return res.status(404).send({
+                                msg: 'Internal error'
+                            });
+                        }
+                        return res.status(404).send({
+                            msg: 'User verified'
+                        });
+                    })
+                  } else {
+                    console.log('otp expired');
+                    return res.status(404).send({
+                        msg: 'OTP expired'
+                    });
+                  }
+            } else {
+                return res.status(404).send({
+                    msg: 'Invalid OTP'
+                });
+            }
+        });
+        client.release();
+    } catch (e) {
+        throw (e)
+    }
 });
 
 module.exports = router;
