@@ -12,6 +12,7 @@ var randomize = require('randomatic');
 const pool = require('../db/postgres');
 
 var jwtToken = require('../auth/jwtToken');
+var generateQr = require('./qrGenerator');
 
 // user.get('/suma',async function (req, res){
 //     for (var i=0;i<10;i++){
@@ -81,10 +82,14 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                                 // TODO: discuss add when necessary
                                 // sendEmail(req.body.name, id, req.body.email);
                                 client.query(`Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id=$1 AND time_slot_id=$2 AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id=$1);`, [req.body.market_place_id, req.body.time_slot_id], async function (err, result) {
-                                    return res.status(200).send({
-                                        file: id,
-                                        msg: 'Slot booked successfully'
-                                    });
+                                    var qrData = {
+                                        booking_id: id,
+                                        customer_id: req.token.id,
+                                        market_palce_id: req.body.market_place_id,
+                                        aadhar: req.body.aadhar,
+                                        time_slot: req.body.time_slot
+                                    };
+                                    await generateQr(id, JSON.stringify(qrData), res);
                                 });
                             }
                         });
