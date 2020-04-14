@@ -93,31 +93,38 @@ admin.get('/get_time_slots',jwtToken ,async function (req, res){
 });
 
 admin.get('/ALL_MarketPlace_List',jwtToken ,async function (req, res){
-    const client = await pool().connect();
-    await client.query(`SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,
-                               (SELECT json_agg(json_build_object('id',t.time_slot_id,'time_slot_range', t.time_slot_range)) as time_slot 
-                                from time_slot as t 
-                                where t.time_slot_id IN (select regexp_split_to_table(time_slot_ids, E',') 
-                                                        from market_place_all_details as m 
-                                                        where m.market_place_id=mpad.market_place_id)) as time_data,mpad.customer_max_count,mpad.active_check
-                        from market_place_all_details as mpad ;`, function (err, result) {
-        if (err) {
-            console.log('err in retreaving marketplaces', err);
-            return res.status(500).send({
-                msg: 'Internal error / Bad payload'
-            })
-        } else {
-            if (!result.rows[0]) {
-                return res.status(404).send({
-                    msg: "No MarketPalces Till now Added."
+    if ( !req.query.on_date){
+        return res.status(403).send({
+            msg: "Bad payload"
+        });
+    }
+    else{
+        const client = await pool().connect();
+        await client.query(`SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,
+                                (SELECT json_agg(json_build_object('id',t.time_slot_id,'time_slot_range', t.time_slot_range)) as time_slot 
+                                    from time_slot as t 
+                                    where t.time_slot_id IN (select regexp_split_to_table(time_slot_ids, E',') 
+                                                            from market_place_all_details as m 
+                                                            where m.market_place_id=mpad.market_place_id)) as time_data,mpad.customer_max_count,mpad.active_check
+                            from market_place_all_details as mpad  where $1 = ANY (string_to_array(mpad.on_dates,','));`,[req.query.on_date], async function (err, result) {
+            if (err) {
+                console.log('err in retreaving marketplaces', err);
+                return res.status(500).send({
+                    msg: 'Internal error / Bad payload'
                 })
             } else {
-                return res.status(200).send({
-                    TotalMarketPlaceList: result.rows
-                });
+                if (!result.rows[0]) {
+                    return res.status(404).send({
+                        msg: "No MarketPalces Till now Added."
+                    })
+                } else {
+                    return res.status(200).send({
+                        TotalMarketPlaceList: result.rows
+                    });
+                }
             }
-        }
-    });
+        });
+    }
     client.release();
 });
 

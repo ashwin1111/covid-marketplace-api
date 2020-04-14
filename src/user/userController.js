@@ -72,22 +72,24 @@ user.get('/MarketPlaces', jwtToken, async function (req, res) {
 });
 
 user.post('/book_slot', jwtToken, async function (req, res) {
-    // console.log(req.token.id);
-    if (!req.body.market_place_id || !req.body.time_slot_id || !req.token.id) {
+    console.log(req.token.id);
+    if (!req.body.market_place_id || !req.body.time_slot_id || !req.token.id || !req.body.on_date) {
         return res.status(403).send({
             msg: "Bad payload"
         });
     }
     var today = new Date();
-    var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+    var today_date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+    console.log(req.body.market_place_id,req.token.id,req.body.time_slot_id,today_date,req.body.on_date);
     const client = await pool().connect();
-    await client.query("Select tab1.one as pre_booked,tab2.possible_count as remaining_slot from (select count(*) as one from bookings where booking_market_place_id=$1 AND booking_customer_id=$2 AND booking_time_slot_id=$3 AND created_at::date = $4) as tab1,(Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id=$1 AND cu.time_slot_id= $3) as tab2;",[req.body.market_place_id,req.token.id,req.body.time_slot_id,date], async function (err, result) {
+    await client.query("Select tab1.one as pre_booked,tab2.possible_count as remaining_slot from (select count(*) as one from bookings where booking_market_place_id=$1 AND booking_customer_id=$2 AND booking_time_slot_id=$3 AND on_date = $4) as tab1,(Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id=$1 AND cu.time_slot_id= $3 and cu.on_date=$4) as tab2;",[req.body.market_place_id,req.token.id,req.body.time_slot_id,req.body.on_date], async function (err, result) {
         if (err) {
             console.log('err in retreaving possibility', err);
             return res.status(500).send({
                 msg: 'Internal error / Bad payload'
             })
         } else {
+            // console.log(result.rows);
             if (!result.rows[0]) {
                 return res.status(404).send({
                     msg: "Given Data is invalid"
@@ -99,7 +101,7 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                         id = 'bid' + id;
                         qr_code = id;
                         var digital = await randomize('0', 6);
-                        client.query(`INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,digit_code,active_check,created_at) values($1,$2,$3,$4,$5,$6,'1',now());`, [id, req.token.id, req.body.market_place_id, req.body.time_slot_id, qr_code,digital], async function (err, result) {
+                        client.query(`INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,digit_code,active_check,created_at,on_date) values($1,$2,$3,$4,$5,$6,'1',now(),$7);`, [id, req.token.id, req.body.market_place_id, req.body.time_slot_id, qr_code,digital,req.body.on_date], async function (err, result) {
                             if (err) {
                                 console.log('err in booking slot', err);
                                 return res.status(500).send({
@@ -108,7 +110,14 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                             } else {
                                 // TODO: discuss add when necessary
                                 // sendEmail(req.body.name, id, req.body.email);
-                                client.query(`Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id=$1 AND time_slot_id=$2 AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id=$1);`, [req.body.market_place_id, req.body.time_slot_id], async function (err, result) {
+                                client.query(`Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id=$1 AND time_slot_id=$2 AND on_date=$3 AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id=$1 AND $3 = ANY (string_to_array(on_dates,',')));`, [req.body.market_place_id, req.body.time_slot_id,req.body.on_date], async function (err, result) {
+                                    if(err){
+                                        console.log('err in update count booking slot', err);
+                                        return res.status(500).send({
+                                            msg: 'Internal error / Bad payload'
+                                        })
+                                    }
+                                    else{
                                     var qrData = {
                                         booking_id: id,
                                         customer_id: req.token.id,
@@ -117,6 +126,7 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                                         time_slot: req.body.time_slot
                                     };
                                     await generateQr(id, digital, JSON.stringify(qrData), res);
+                                }
                                 });
                             }
                         });

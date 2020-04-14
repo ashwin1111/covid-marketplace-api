@@ -67,6 +67,8 @@ Alter table market_place_all_details ADD column on_dates text;
 
 Alter table count_updates ADD column on_date text;
 
+Alter table bookings ADD column on_date text;
+
 --Update Table queries:
 
 update customer_cred SET verified = 'verified' where verified ='1';
@@ -114,12 +116,15 @@ Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_pla
 left join count_updates as cu On m.market_place_id=cu.market_place_id
 where m.market_place_id='mpadidb40mu2' AND cu.time_slot_id='mpidd2g6f8';
 
-Select tab1.one as pre_booked,tab2.possible_count as remaining_slot from (select count(*) as one from bookings where booking_market_place_id='mpadidb40mu2' AND booking_customer_id='cidgbqx26' AND booking_time_slot_id='mpidkv1mfa' AND created_at::date = '2020-04-13') as tab1,(Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id='mpadidb40mu2' AND cu.time_slot_id= 'mpidkv1mfa') as tab2; where tab1.one != 1 AND tab2.possible_count !=0;
+--Select tab1.one as pre_booked,tab2.possible_count as remaining_slot from (select count(*) as one from bookings where booking_market_place_id='mpadidb40mu2' AND booking_customer_id='cidgbqx26' AND booking_time_slot_id='mpidkv1mfa' AND created_at::date = '2020-04-13') as tab1,(Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id='mpadidb40mu2' AND cu.time_slot_id= 'mpidkv1mfa') as tab2; where tab1.one != 1 AND tab2.possible_count !=0;
+
+Select tab1.one as pre_booked,tab2.possible_count as remaining_slot from (select count(*) as one from bookings where booking_market_place_id='mpadidt2apps' AND booking_customer_id='cidwyerex' AND booking_time_slot_id='mpidvhclme' AND on_date = '2020-12-05') as tab1,(Select (m.customer_max_count-cu.count_on_slot) as possible_count from market_place_all_details as m left join count_updates as cu On m.market_place_id=cu.market_place_id where m.market_place_id='mpadidt2apps' AND cu.time_slot_id= 'mpidvhclme' and cu.on_date='2020-12-05') as tab2;
 
 INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,digital_code,active_check,created_at) values($1,$2,$3,$4,$5,$6,'1',now());
 
-Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id='mpadidb40mu2' AND time_slot_id='mpidd2g6f8' AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id='mpadidb40mu2');
+-- Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id='mpadidb40mu2' AND time_slot_id='mpidd2g6f8' AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id='mpadidb40mu2');
 
+Update count_updates SET count_on_slot = count_on_slot + 1 where market_place_id='mpadidt2apps' AND time_slot_id='mpidvhclme' AND on_date='2020-12-03' AND count_on_slot < (select customer_max_count from market_place_all_details where market_place_id=$1 AND '2020-12-03' = ANY (string_to_array(on_dates,',')))
 
 
 --admin add market:
