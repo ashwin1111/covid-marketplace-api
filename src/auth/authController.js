@@ -218,7 +218,7 @@ router.post('/resend_otp', async (req, res) => {
                     let msg = '\nHi ' + req.body.name + ', please enter this 6 digit OTP ' + result.rows[0].otp + ' in the application to get your account verified\n';
                     sendOtp(req.body.phno, msg);
                     incrementCount(req.body.phno);
-                    return res.status(403).send({
+                    return res.status(200).send({
                         msg: "OTP sent successfully"
                     });
                 }
