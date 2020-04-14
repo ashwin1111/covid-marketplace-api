@@ -155,12 +155,13 @@ user.post('/book_slot', jwtToken, async function (req, res) {
 
 user.get('/booking_history', jwtToken, async function (req, res) {
     const client = await pool().connect();
-    await client.query(`select booking_id,
+    await client.query(`select b.booking_id,
     market.market_data,
-    booking_time_slot_id,
-    'https://testtest.s3.us-east-2.amazonaws.com/'|| qr_code as file_name,
-    digit_code,
-    on_date 
+    b.booking_time_slot_id,
+    (select time_slot_range from time_slot where time_slot_id=b.booking_time_slot_id),
+    'https://testtest.s3.us-east-2.amazonaws.com/'|| qr_code  as file_name,
+    b.digit_code,
+    b.on_date  
     from bookings as b
     left join (select market_place_id,json_build_object('name',market_palce_name,'address',market_place_address) as market_data ,on_dates from market_place_all_details)as market on market.market_place_id=b.booking_market_place_id 
     where b.booking_customer_id=$1 and b.active_check='1';`, [req.token.id], function (err, result) {
