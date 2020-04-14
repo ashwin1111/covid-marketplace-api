@@ -112,8 +112,8 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                 }
             }
         }
-        client.release();
     });
+    client.release();
 });
 
 module.exports = user;
