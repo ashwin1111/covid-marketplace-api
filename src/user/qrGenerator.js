@@ -3,7 +3,7 @@ const qrcode = require('qrcode');
 
 var uploadToS3 = require('./uploadS3');
 
-function qr(filename, filecontents, res) {
+function qr(filename, digital, filecontents, res) {
     run().catch(error => {
         console.error(error)
         return res.status(403).send({
@@ -21,7 +21,7 @@ function qr(filename, filecontents, res) {
                     msg: 'Internal Error'
                 });
             } else {
-                uploadToS3(filename, res);
+                uploadToS3(filename, digital, res);
             }
         });
     }
