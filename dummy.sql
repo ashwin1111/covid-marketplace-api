@@ -172,6 +172,7 @@ select * from count_updates as cu where cu.time_slot_id NOT IN (select regexp_sp
 
 --booking history page:
 
+
 select b.booking_id,
 market.market_data,
 b.booking_time_slot_id,
