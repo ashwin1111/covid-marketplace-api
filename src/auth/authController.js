@@ -162,7 +162,7 @@ router.post('/verify', async function (req, res) {
                                 msg: 'Internal error'
                             });
                         }
-                        return res.status(404).send({
+                        return res.status(200).send({
                             msg: 'User verified'
                         });
                     })
@@ -185,14 +185,14 @@ router.post('/verify', async function (req, res) {
 });
 
 router.post('/resend_otp', async (req, res) => {
-    async function incrementCount (phno) {
+    async function incrementCount(phno) {
         const client = await pool().connect();
-        await client.query(`update customer_cred set expiry_time = now() + INTERVAL '3 minute' where customer_phone = $1`, [phno], function(err, result) {
+        await client.query(`update customer_cred set expiry_time = now() + INTERVAL '3 minute' where customer_phone = $1`, [phno], function (err, result) {
             if (err) {
                 console.log(err);
             }
         });
-        await client.query(`insert into resend_otp (phone_num, otp_requested_at) values ($1, now())`, [phno], function(err, result) {
+        await client.query(`insert into resend_otp (phone_num, otp_requested_at) values ($1, now())`, [phno], function (err, result) {
             if (err) {
                 console.log(err);
             }
@@ -210,16 +210,16 @@ router.post('/resend_otp', async (req, res) => {
     await client.query('select * from customer_cred where customer_phone = $1 and verified = $2', [req.body.phno, 'otp_pending'], async function (err, result) {
         if (result.rows[0]) {
             await client.query('select phone_num, count(*) from resend_otp where phone_num=$1 group by phone_num', [req.body.phno], async function (err, result1) {
-                if (result1.rows[0] && parseInt(result1.rows[0].count) < 6) {
+                if (result1.rows[0] && parseInt(result1.rows[0].count) > 5) {
+                    return res.status(403).send({
+                        msg: "Limit exceeded"
+                    });
+                } else {
                     let msg = '\nHi ' + req.body.name + ', please enter this 6 digit OTP ' + result.rows[0].otp + ' in the application to get your account verified\n';
                     sendOtp(req.body.phno, msg);
                     incrementCount(req.body.phno);
-                    return res.status(403).send({
+                    return res.status(200).send({
                         msg: "OTP sent successfully"
-                    });
-                } else {
-                    return res.status(403).send({
-                        msg: "Limit exceeded"
                     });
                 }
             });
