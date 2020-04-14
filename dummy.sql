@@ -167,3 +167,18 @@ SELECT market.count as market_time_count,updates.count as update_time_count from
 select * from count_updates as cu where cu.time_slot_id IN (select regexp_split_to_table(m.time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=cu.market_place_id) AND cu.market_place_id='mpadidxfi6zd';
 
 select * from count_updates as cu where cu.time_slot_id NOT IN (select regexp_split_to_table(m.time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=cu.market_place_id) AND cu.market_place_id='mpadidxfi6zd';
+
+
+--booking history page:
+
+select booking_id,
+market.market_data,
+booking_time_slot_id,
+'https://testtest.s3.us-east-2.amazonaws.com/'|| qr_code  as file_name,
+digit_code,
+on_date 
+from bookings as b
+left join (select market_place_id,json_build_object('name',market_palce_name,'address',market_place_address) as market_data ,on_dates from market_place_all_details)as market on market.market_place_id=b.booking_market_place_id 
+where b.booking_customer_id='cidwyerex' and b.active_check= '1';
+
+-- AND b.on_date = ANY (string_to_array(market.on_dates,','))
