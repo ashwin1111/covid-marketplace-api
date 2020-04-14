@@ -162,6 +162,7 @@ from market_place_all_details as mpad ;
 --update query
 
 --select difference:
+
 SELECT market.count as market_time_count,updates.count as update_time_count from (Select count(*) from (select regexp_split_to_table(time_slot_ids, E',') as times from market_place_all_details where market_place_id ='mpadidxfi6zd') AS m) AS market,(select count(*) from count_updates where market_place_id = 'mpadidxfi6zd') AS updates;
 
 select * from count_updates as cu where cu.time_slot_id IN (select regexp_split_to_table(m.time_slot_ids, E',') from market_place_all_details as m where m.market_place_id=cu.market_place_id) AND cu.market_place_id='mpadidxfi6zd';

@@ -58,9 +58,9 @@ user.get('/MarketPlaces', jwtToken, async function (req, res) {
             })
         } else {
             if (!result.rows[0]) {
-                return res.status(404).send({
-                    msg: "No Market-Place details found with the active status"
-                })
+                return res.status(200).send({
+                    msg: "No Market-Place details found with the active status for that date"
+                });
             } else {
                 return res.status(200).send({
                     marketPlaces: result.rows
