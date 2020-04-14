@@ -162,7 +162,7 @@ router.post('/verify', async function (req, res) {
                                 msg: 'Internal error'
                             });
                         }
-                        return res.status(404).send({
+                        return res.status(200).send({
                             msg: 'User verified'
                         });
                     })
