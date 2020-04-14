@@ -78,7 +78,7 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                         id = 'bid' + id;
                         qr_code = id;
                         var digital = await randomize('0', 6);
-                        client.query(`INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,digital_code,active_check,created_at) values($1,$2,$3,$4,$5,$6,'1',now());`, [id, req.token.id, req.body.market_place_id, req.body.time_slot_id, qr_code,digital], async function (err, result) {
+                        client.query(`INSERT INTO bookings(booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,qr_code,digit_code,active_check,created_at) values($1,$2,$3,$4,$5,$6,'1',now());`, [id, req.token.id, req.body.market_place_id, req.body.time_slot_id, qr_code,digital], async function (err, result) {
                             if (err) {
                                 console.log('err in booking slot', err);
                                 return res.status(500).send({
@@ -118,8 +118,8 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                 }
             }
         }
-        client.release();
     });
+    client.release();
 });
 
 module.exports = user;
