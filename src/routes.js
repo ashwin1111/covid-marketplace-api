@@ -14,4 +14,6 @@ app.use('/admin', require('./admin/adminController'));
 
 app.use('/user', require('./user/userController'));
 
+app.use('/scanner', require('./scanner/scanController'));
+
 module.exports = app;
