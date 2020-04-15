@@ -123,7 +123,8 @@ user.post('/book_slot', jwtToken, async function (req, res) {
                                         customer_id: req.token.id,
                                         market_palce_id: req.body.market_place_id,
                                         aadhar: req.body.aadhar,
-                                        time_slot: req.body.time_slot
+                                        time_slot: req.body.time_slot,
+                                        on_date: req.body.on_date
                                     };
                                     await generateQr(id, digital, JSON.stringify(qrData), res);
                                 }
