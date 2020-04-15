@@ -116,7 +116,8 @@ router.post('/login', async function (req, res) {
                     var data = {
                         name: result.rows[0].customer_name,
                         phno: result.rows[0].customer_phone,
-                        aadhar: result.rows[0].customer_aadhar_num
+                        aadhar: result.rows[0].customer_aadhar_num,
+                        email: result.rows[0].customer_email
                     };
 
                     return res.status(200).send({
