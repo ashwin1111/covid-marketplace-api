@@ -25,7 +25,7 @@ admin.post('/AdminLogin', async function (req, res) {
         });
     }
     const client = await pool().connect();
-    await client.query('SELECT * FROM admin_cred WHERE admin_id = $1', [req.body.userid], function (err, result) {
+    await client.query('SELECT * FROM admin_cred WHERE admin_id = $1', [req.body.userid], async function (err, result) {
         if (err) {
             console.log('err in login', err);
             return res.status(500).send({
@@ -71,7 +71,7 @@ admin.post('/AdminLogin', async function (req, res) {
 
 admin.get('/get_time_slots',jwtToken ,async function (req, res){
     const client = await pool().connect();
-    await client.query("select time_slot_id,time_slot_range from time_slot;", function (err, result) {
+    await client.query("select time_slot_id,time_slot_range from time_slot;", async function (err, result) {
         if (err) {
             console.log('err in retreaving marketplaces', err);
             return res.status(500).send({

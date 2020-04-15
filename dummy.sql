@@ -53,7 +53,9 @@ ALTER Table customer_cred ALTER COLUMN verified TYPE text;
 
 ALTER TABLE customer_cred alter verified set DEFAULT 'otp_pending';
 
-ALTER table customer_cred ADD CONSTRAINT unique_values UNIQUE (customer_email),UNIQUE (customer_phone),UNIQUE (customer_aadhar_num);
+ALTER table customer_cred ADD CONSTRAINT unique_values UNIQUE (customer_email);
+ALTER table customer_cred ADD CONSTRAINT unique_ph_values UNIQUE (customer_phone);
+ALTER table customer_cred ADD CONSTRAINT unique_ad_values UNIQUE (customer_aadhar_num);
 
 ALTER TABLE market_place_all_details ADD COLUMN market_place_address text;
 
@@ -69,6 +71,13 @@ Alter table count_updates ADD column on_date text;
 
 Alter table bookings ADD column on_date text;
 
+Alter table active_market_place_details DROP column present_customer_count ;
+
+alter table active_market_place_details ADD column active_time_slot_id text;
+
+alter table active_market_place_details ADD column booking_id text;
+
+ALTER table active_market_place_details ADD CONSTRAINT unique_book_values UNIQUE (booking_id);
 --Update Table queries:
 
 update customer_cred SET verified = 'verified' where verified ='1';
@@ -172,7 +181,6 @@ select * from count_updates as cu where cu.time_slot_id NOT IN (select regexp_sp
 
 --booking history page:
 
-
 select b.booking_id,
 market.market_data,
 b.booking_time_slot_id,
@@ -185,3 +193,38 @@ left join (select market_place_id,json_build_object('name',market_palce_name,'ad
 where b.booking_customer_id='cidwyerex' and b.active_check= '1';
 
 -- AND b.on_date = ANY (string_to_array(market.on_dates,','))
+
+--scanner queries:
+-- display shops:
+
+select  market_place_id,
+        market_palce_name, 
+        market_place_address 
+from market_place_all_details 
+where '2020-12-03' = ANY (string_to_array(on_dates,',')) AND active_check='1';
+
+--scanner activity:
+select exit_time from active_market_place_details where booking_id =$1;
+
+-- count display after entry insert:
+
+INSERT into active_market_place_details(active_market_place_details_id,booking_id,active_customer_id,active_market_palce_id,active_time_slot_id,entry_time,created_at)
+select $1,booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,now() as entry,now() as created_at from bookings where booking_id ='bidp6yliv';
+
+select active_market_palce_id,count(*) 
+from active_market_place_details 
+where active_market_palce_id=(  select booking_market_place_id 
+                                from bookings 
+                                where booking_id='bidp6yliv') AND exit_time is NULL group by active_market_palce_id;
+
+-- count display after exit update:
+
+Update active_market_place_details SET exit_time = now() where booking_id='bidp6yliv';
+
+select active_market_palce_id,count(*) 
+from active_market_place_details 
+where active_market_palce_id=(  select booking_market_place_id 
+                                from bookings 
+                                where booking_id='bidp6yliv') AND exit_time is NULL group by active_market_palce_id;
+
+

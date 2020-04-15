@@ -50,7 +50,7 @@ user.get('/MarketPlaces', jwtToken, async function (req, res) {
                                             where m.market_place_id=mpad.market_place_id ) as st On st.time_id = t.time_slot_id 
                                 left join count_updates as cu on cu.market_place_id=st.market_place_id AND cu.time_slot_id=st.time_id AND cu.count_on_slot < st.max_cus_count 
                                 where st.time_id is NOT NULL AND cu.count_on_slot is NOT NULL) 
-                        from market_place_all_details as mpad where mpad.active_check=$1 and $2 = ANY (string_to_array(mpad.on_dates,','));`, ['1',req.query.on_date], function (err, result) {
+                        from market_place_all_details as mpad where mpad.active_check=$1 and $2 = ANY (string_to_array(mpad.on_dates,','));`, ['1',req.query.on_date],async  function (err, result) {
         if (err) {
             console.log('err in retreaving marketplaces', err);
             return res.status(500).send({
@@ -164,7 +164,7 @@ user.get('/booking_history', jwtToken, async function (req, res) {
     b.on_date  
     from bookings as b
     left join (select market_place_id,json_build_object('name',market_palce_name,'address',market_place_address) as market_data ,on_dates from market_place_all_details)as market on market.market_place_id=b.booking_market_place_id 
-    where b.booking_customer_id=$1 and b.active_check='1';`, [req.token.id], function (err, result) {
+    where b.booking_customer_id=$1 and b.active_check='1';`, [req.token.id], async function (err, result) {
         if (err) {
             console.log('err in retreaving marketplaces', err);
             return res.status(500).send({
