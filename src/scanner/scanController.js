@@ -47,7 +47,7 @@ scan.get('/get_scanner_markets' ,async function (req, res){
 });
 
 scan.post('/market_entry_exit' ,async function (req, res){
-    if ( !req.body.booking_id || !req.body.market_place_id || !req.date || !req.body.do_it){
+    if ( !req.body.booking_id || !req.body.market_place_id || !req.body.date || !req.body.do_it){
         return res.status(403).send({
             msg: "Bad payload"
         });
