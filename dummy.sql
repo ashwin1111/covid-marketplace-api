@@ -205,6 +205,11 @@ from market_place_all_details
 where '2020-12-03' = ANY (string_to_array(on_dates,',')) AND active_check='1';
 
 --scanner activity:
+
+--details check:
+select * from bookings where booking_id='bidp6yliv' AND booking_market_place_id='mpadidt2apps';
+
+--do_it check:
 select exit_time from active_market_place_details where booking_id =$1;
 
 -- count display after entry insert:
@@ -227,5 +232,6 @@ from active_market_place_details
 where active_market_palce_id=(  select booking_market_place_id 
                                 from bookings 
                                 where booking_id='bidp6yliv') AND exit_time is NULL group by active_market_palce_id;
+
 
 
