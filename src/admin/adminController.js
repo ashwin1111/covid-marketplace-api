@@ -129,6 +129,51 @@ admin.get('/ALL_MarketPlace_List',jwtToken ,async function (req, res){
 });
 
 admin.post('/AddMarketPlaces', jwtToken, async function (req, res) {
+    var successCount = 0;
+
+    function takeRest() {
+        return new Promise(r => setTimeout(r, 100))
+    }
+
+    async function dbOperation(result, countUpdateIdArray) {
+        return new Promise(async (resolve) => {
+
+            client.query(`INSERT INTO count_updates (count_update_id,market_place_id,on_date,count_on_slot,created_at,time_slot_id) values($1,$2,$3,$4,$5,$6)`, [countUpdateIdArray[successCount],result.rows[successCount].market_place_id,result.rows[successCount].date,result.rows[successCount].c,result.rows[successCount].now,result.rows[successCount].time_slot_id], async function (err, result2) {
+                if (err) {
+                    console.log('err in count updates', err);
+                    return res.status(500).send({
+                        msg: 'Internal error / Bad payload'
+                    })
+                } else {
+                    // console.log("check",result);
+                    
+                    if (result2.rowCount!=0){
+                        console.log('chaining promises, added', countUpdateIdArray[successCount], result.rowCount-1, successCount);
+                        if (result.rowCount-1 === successCount) {
+                            console.log('releasing client');
+                            client.release();
+                        }
+                        successCount++;
+                        resolve();
+                        // return res.status(200).send({
+                        //     msg: "Market-Place Added Successfully :)"
+                        // });
+                    }
+                    
+                }
+            });
+
+    })
+}
+
+    async function chaining(result, countUpdateIdArray) {
+        let chain = Promise.resolve();
+        // transaction
+        for (var h=0;h<result.rowCount;h++) {
+            chain = chain.then(() => dbOperation(result, countUpdateIdArray))
+                .then(takeRest)
+        }
+    }
     if (!req.body.market_palce_name || !req.body.market_place_address || !req.body.time_slot_ids || !req.body.customer_max_count || !req.body.active_check || !req.body.dates) {
         return res.status(403).send({
             msg: "Bad payload"
@@ -169,31 +214,16 @@ admin.post('/AddMarketPlaces', jwtToken, async function (req, res) {
                 }
                 else{
                     if(result.rowCount==(id_arr.length*date_arr.length)){
-                        for(var h=0;h<result.rowCount;h++){
-                            client.query(`INSERT INTO count_updates (count_update_id,market_place_id,on_date,count_on_slot,created_at,time_slot_id) values($1,$2,$3,$4,$5,$6)`, [send[h],result.rows[h].market_place_id,result.rows[h].date,result.rows[h].c,result.rows[h].now,result.rows[h].time_slot_id], async function (err, result) {
-                                if (err) {
-                                    console.log('err in count updates', err);
-                                    return res.status(500).send({
-                                        msg: 'Internal error / Bad payload'
-                                    })
-                                } else {
-                                    console.log("check",result);
-                                    if (result.rowCount!=0){
-                                        return res.status(200).send({
-                                            msg: "Market-Place Added Successfully :)"
-                                        });
-                                    }
-                                    
-                                }
-                            });
-                        }
+                        await chaining(result, send);
+                        return res.status(200).send({
+                            msg: "Market-Place Added Successfully :)"
+                        });
                     }
                 }
             // console.log("send",send);
         });
         }
     });
-    client.release();
 });
 
 
