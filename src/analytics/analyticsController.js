@@ -7,20 +7,15 @@ stat.use(bodyParser.urlencoded({
 }));
 stat.use(bodyParser.json());
 
-
-var bcrypt = require('bcryptjs');
-
-var randomize = require('randomatic');
-
 const pool = require('../db/postgres');
 
-
-stat.get('/get_date_counts' ,async function (req, res){
-    if ( !req.query.on_date){
+stat.get('/get_date_counts', async function (req, res) {
+    if (!req.query.on_date) {
         return res.status(403).send({
             msg: "Bad payload"
         });
     }
+
     const client = await pool().connect();
     await client.query(`Select  m.market_place_id,
                             m.market_palce_name,
@@ -38,7 +33,7 @@ stat.get('/get_date_counts' ,async function (req, res){
                         from market_place_all_details as m 
                         where m.market_license_number IN (SELECT market_license_number 
                                                     from market_place_all_details 
-                                                    where $1 = ANY (string_to_array(on_dates,','))) ;`,[req.query.on_date] ,async function (err, result) {
+                                                    where $1 = ANY (string_to_array(on_dates,','))) ;`, [req.query.on_date], async function (err, result) {
         if (err) {
             console.log('err in retreaving marketplaces', err);
             return res.status(500).send({
@@ -58,7 +53,5 @@ stat.get('/get_date_counts' ,async function (req, res){
     });
     client.release();
 });
-
-
 
 module.exports = stat;

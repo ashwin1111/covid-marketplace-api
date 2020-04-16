@@ -155,7 +155,6 @@ router.post('/verify', async function (req, res) {
 
             if (result.rows[0]) {
                 if (new Date(result.rows[0].expiry_time).toUTCString() > new Date().toUTCString()) {
-                    console.log('not expired');
                     await client.query('update customer_cred set verified = $1 where customer_id = $2', ['verified', result.rows[0].customer_id], async function (err, result) {
                         if (err) {
                             console.log('err in updating user to verified', err);
