@@ -129,7 +129,7 @@ admin.get('/ALL_MarketPlace_List',jwtToken ,async function (req, res){
 });
 
 admin.post('/AddMarketPlaces', jwtToken, async function (req, res) {
-    if (!req.body.market_palce_name || !req.body.market_place_address || !req.body.time_slot_ids || !req.body.customer_max_count || !req.body.active_check || !req.body.dates) {
+    if (!req.body.market_palce_name || !req.body.market_place_address || !req.body.time_slot_ids || !req.body.customer_max_count || !req.body.active_check || !req.body.dates || !req.body.market_license) {
         return res.status(403).send({
             msg: "Bad payload"
         });
@@ -138,7 +138,7 @@ admin.post('/AddMarketPlaces', jwtToken, async function (req, res) {
     var id = await randomize('a0', 6);
     mid = 'mpadid' + id;
     const client = await pool().connect();
-    await client.query("INSERT INTO market_place_all_details (market_place_id,market_palce_name,market_place_address,time_slot_ids,customer_max_count,active_check,created_at,on_dates) values($1,$2,$3,$4,$5,$6,now(),$7);", [mid,req.body.market_palce_name,req.body.market_place_address,req.body.time_slot_ids,req.body.customer_max_count,req.body.active_check,req.body.dates], async function (err, result) {
+    await client.query("INSERT INTO market_place_all_details (market_place_id,market_palce_name,market_place_address,time_slot_ids,customer_max_count,active_check,created_at,on_dates,market_license_number) values($1,$2,$3,$4,$5,$6,now(),$7);", [mid,req.body.market_palce_name,req.body.market_place_address,req.body.time_slot_ids,req.body.customer_max_count,req.body.active_check,req.body.dates,req.body.market_licens], async function (err, result) {
         if (err) {
             console.log('err in adding marketplace', err);
             return res.status(500).send({
