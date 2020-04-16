@@ -53,7 +53,7 @@ user.get('/MarketPlaces', jwtToken, async function (req, res) {
                                         where st.time_id is NOT NULL AND cu.count_on_slot is NOT NULL) as f
                                         where f.on_date=$2)
                         from market_place_all_details as mpad 
-                        where mpad.active_check=$1 and $2 = ANY (string_to_array(mpad.on_dates,','))`, [req.query.on_date],async  function (err, result) {
+                        where mpad.active_check=$1 and $2 = ANY (string_to_array(mpad.on_dates,','))`, ['1',req.query.on_date],async  function (err, result) {
         if (err) {
             console.log('err in retreaving marketplaces', err);
             return res.status(500).send({
