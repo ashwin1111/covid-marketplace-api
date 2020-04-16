@@ -78,6 +78,8 @@ alter table active_market_place_details ADD column active_time_slot_id text;
 alter table active_market_place_details ADD column booking_id text;
 
 ALTER table active_market_place_details ADD CONSTRAINT unique_book_values UNIQUE (booking_id);
+
+ALTER table market_place_all_details Add column market_license_number text;
 --Update Table queries:
 
 update customer_cred SET verified = 'verified' where verified ='1';

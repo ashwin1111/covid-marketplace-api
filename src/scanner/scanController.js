@@ -74,7 +74,7 @@ scan.post('/market_entry_exit' ,async function (req, res){
                                 if(req.body.do_it=='in') {
                                 var id = await randomize('a0', 6);
                                 var activeid = 'ampdid' + id;
-                                client.query(`INSERT into active_market_place_details(active_market_place_details_id,booking_id,active_customer_id,active_market_palce_id,active_time_slot_id,entry_time,created_at)
+                                await client.query(`INSERT into active_market_place_details(active_market_place_details_id,booking_id,active_customer_id,active_market_palce_id,active_time_slot_id,entry_time,created_at)
                                 select $1,booking_id,booking_customer_id,booking_market_place_id,booking_time_slot_id,now() as entry,now() as created_at from bookings where booking_id =$2;`,[activeid,req.body.booking_id], async function (err, result) {
                                     if (err) {
                                         console.log('err in count updates', err);
@@ -82,7 +82,7 @@ scan.post('/market_entry_exit' ,async function (req, res){
                                             msg: 'Internal error / Bad payload'
                                         })
                                     } else {
-                                        client.query(`select active_market_palce_id,count(*) from active_market_place_details where active_market_palce_id=(select booking_market_place_id from bookings where booking_id=$1) AND exit_time is NULL group by active_market_palce_id;`,[req.body.booking_id] , async function (err, result) {
+                                       await client.query(`select count(*) from active_market_place_details where active_market_palce_id=(select booking_market_place_id from bookings where booking_id=$1) AND exit_time is NULL;`,[req.body.booking_id] , async function (err, result) {
                                             if (err) {
                                                 console.log('err in count updates', err);
                                                 return res.status(500).send({
@@ -112,22 +112,22 @@ scan.post('/market_entry_exit' ,async function (req, res){
                             } else {
                                 if(result.rows[0].exit_time==null){
                                     if(req.body.do_it=='out'){
-                                    client.query(`Update active_market_place_details SET exit_time = now() where booking_id=$1;`,[req.body.booking_id] , async function (err, result) {
+                                    await client.query(`Update active_market_place_details SET exit_time = now() where booking_id=$1;`,[req.body.booking_id] , async function (err, result) {
                                         if (err) {
                                             console.log('err in count updates', err);
                                             return res.status(500).send({
                                                 msg: 'Internal error / Bad payload'
                                             })
                                         } else {
-                                            // console.log("check",result);
-                                            client.query(`select active_market_palce_id,count(*) from active_market_place_details where active_market_palce_id=(select booking_market_place_id from bookings where booking_id=$1) AND exit_time is NULL group by active_market_palce_id;`,[req.body.booking_id] , async function (err, result) {
+                                            // console.log("check1",result).rows; 
+                                            await client.query(`select count(*) from active_market_place_details where active_market_palce_id=(select booking_market_place_id from bookings where booking_id=$1) AND exit_time is NULL;`,[req.body.booking_id] , async function (err, result) {
                                                 if (err) {
                                                     console.log('err in count updates', err);
                                                     return res.status(500).send({
                                                         msg: 'Internal error / Bad payload'
                                                     })
                                                 } else {
-                                                    // console.log("check",result);
+                                                    console.log("check",result.rows);
                                                     if (result.rowCount!=0){
                                                         return res.status(200).send({
                                                             market_customer_count: result.rows[0].count,
