@@ -177,6 +177,7 @@ admin.post('/AddMarketPlaces', jwtToken, async function (req, res) {
                                 } else {
                                     // console.log("check",result);
                                     if (result.rowCount!=0){
+
                                         return res.status(200).send({
                                             msg: "Market-Place Added Successfully :)"
                                         });
