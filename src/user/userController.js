@@ -40,19 +40,20 @@ user.get('/MarketPlaces', jwtToken, async function (req, res) {
     await client.query(`SELECT  mpad.market_place_id,
                                 mpad.market_palce_name,
                                 mpad.market_place_address,
-                                '2020-04-16' as on_date,
+                                $2 as on_date,
                                 (Select json_agg(json_build_object('id',f.time_slot_id,'time_slot_range', f.time_slot_range))
-                                from (SELECT Distinct t.time_slot_id, t.time_slot_range 
+                                from (SELECT Distinct t.time_slot_id, t.time_slot_range,st.max_cus_count,cu.count_on_slot,cu.on_date
                                         from time_slot as t 
                                         left join   (select distinct regexp_split_to_table(m.time_slot_ids, E',') as time_id
-                                                                    ,m.market_place_id as market_place_id
-                                                                    ,m.customer_max_count as max_cus_count 
-                                                        from market_place_all_details as m 
-                                                        where m.market_place_id=mpad.market_place_id ) as st On st.time_id = t.time_slot_id 
+                                                                ,m.market_place_id as market_place_id
+                                                                ,m.customer_max_count as max_cus_count 
+                                                from market_place_all_details as m 
+                                                where m.market_place_id=mpad.market_place_id ) as st On st.time_id = t.time_slot_id 
                                         left join count_updates as cu on cu.market_place_id=st.market_place_id AND cu.time_slot_id=st.time_id AND cu.count_on_slot < st.max_cus_count 
-                                        where st.time_id is NOT NULL AND cu.count_on_slot is NOT NULL) as f) 
+                                        where st.time_id is NOT NULL AND cu.count_on_slot is NOT NULL) as f
+                                        where f.on_date=$2)
                         from market_place_all_details as mpad 
-                        where mpad.active_check=$1 and $2 = ANY (string_to_array(mpad.on_dates,','));`, ['1',req.query.on_date],async  function (err, result) {
+                        where mpad.active_check=$1 and $2 = ANY (string_to_array(mpad.on_dates,',')) and mpad.market_place_id='mpadidmsgwh3';`, ['1',req.query.on_date],async  function (err, result) {
         if (err) {
             console.log('err in retreaving marketplaces', err);
             return res.status(500).send({
