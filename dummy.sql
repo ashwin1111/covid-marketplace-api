@@ -273,4 +273,24 @@ where active_market_palce_id=(  select booking_market_place_id
                                 where booking_id='bidp6yliv') AND exit_time is NULL group by active_market_palce_id;
 
 
+--analytics:
 
+--date_counts:
+
+Select  m.market_place_id,
+        m.market_palce_name,
+        m.market_place_address,
+        m.time_slot_ids,
+        m.customer_max_count,
+        (select count(*) 
+        from active_market_place_details as a 
+        where a.active_market_palce_id=m.market_place_id AND a.exit_time is not null) as visited_people,
+        (select count(*) 
+        from active_market_place_details as a 
+        where a.active_market_palce_id=m.market_place_id AND a.exit_time is null) as present_people,
+        '2020-04-16' as date  
+from market_place_all_details as m 
+where m.market_license_number IN (SELECT market_license_number 
+                                 from market_place_all_details 
+                                 where '2020-04-16' = ANY (string_to_array(on_dates,','))) ;
+-- group by m.market_place_id;
