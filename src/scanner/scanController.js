@@ -82,7 +82,7 @@ scan.post('/market_entry_exit' ,async function (req, res){
                                             msg: 'Internal error / Bad payload'
                                         })
                                     } else {
-                                       await client.query(`select active_market_palce_id,count(*) from active_market_place_details where active_market_palce_id=(select booking_market_place_id from bookings where booking_id=$1) AND exit_time is NULL group by active_market_palce_id;`,[req.body.booking_id] , async function (err, result) {
+                                       await client.query(`select count(*) from active_market_place_details where active_market_palce_id=(select booking_market_place_id from bookings where booking_id=$1) AND exit_time is NULL;`,[req.body.booking_id] , async function (err, result) {
                                             if (err) {
                                                 console.log('err in count updates', err);
                                                 return res.status(500).send({
@@ -119,15 +119,15 @@ scan.post('/market_entry_exit' ,async function (req, res){
                                                 msg: 'Internal error / Bad payload'
                                             })
                                         } else {
-                                            // console.log("check",result);
-                                            await client.query(`select active_market_palce_id,count(*) from active_market_place_details where active_market_palce_id=(select booking_market_place_id from bookings where booking_id=$1) AND exit_time is NULL group by active_market_palce_id;`,[req.body.booking_id] , async function (err, result) {
+                                            // console.log("check1",result).rows; 
+                                            await client.query(`select count(*) from active_market_place_details where active_market_palce_id=(select booking_market_place_id from bookings where booking_id=$1) AND exit_time is NULL;`,[req.body.booking_id] , async function (err, result) {
                                                 if (err) {
                                                     console.log('err in count updates', err);
                                                     return res.status(500).send({
                                                         msg: 'Internal error / Bad payload'
                                                     })
                                                 } else {
-                                                    // console.log("check",result);
+                                                    console.log("check",result.rows);
                                                     if (result.rowCount!=0){
                                                         return res.status(200).send({
                                                             market_customer_count: result.rows[0].count,
