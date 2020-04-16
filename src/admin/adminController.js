@@ -98,7 +98,6 @@ admin.get('/ALL_MarketPlace_List',jwtToken ,async function (req, res){
             msg: "Bad payload"
         });
     }
-    else{
         const client = await pool().connect();
         await client.query(`SELECT mpad.market_place_id,mpad.market_palce_name,mpad.market_place_address,
                                 (SELECT json_agg(json_build_object('id',t.time_slot_id,'time_slot_range', t.time_slot_range)) as time_slot 
@@ -124,7 +123,6 @@ admin.get('/ALL_MarketPlace_List',jwtToken ,async function (req, res){
                 }
             }
         });
-    }
     client.release();
 });
 
