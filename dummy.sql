@@ -299,8 +299,8 @@ where active_market_palce_id=(  select booking_market_place_id
 Select  m.market_place_id,
         m.market_palce_name,
         m.market_place_address,
-        (Select json_agg(json_build_object('id',f.time_slot_id,'time_slot_range', f.time_slot_range))
-        from time_slot as f where f.time_slot_id in (SELECT regexp_split_to_table(m.time_slot_ids, E','))) as time_slot_data,
+        (Select json_agg(json_build_object('id',f.time_slot_id,'time_slot_range', f.time_slot_range,'remaining_booking_count',m.customer_max_count-cu.count_on_slot))
+        from time_slot as f left join count_updates as cu ON cu.time_slot_id = f.time_slot_id where f.time_slot_id in (SELECT regexp_split_to_table(m.time_slot_ids, E',')) AND cu.market_place_id=m.market_place_id) as time_slot_data,
         m.customer_max_count,
         (select count(*) 
         from active_market_place_details as a 
