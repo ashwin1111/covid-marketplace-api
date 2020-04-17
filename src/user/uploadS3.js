@@ -24,7 +24,7 @@ function aws(filename, digital, res) {
                     console.log("Uploaded img to s3 location ", data.Location);
                     fs.unlinkSync('src/user/tempImages/' + filename + '.png');
                     return res.status(200).send({
-                        file: 'https://testtest.s3.us-east-2.amazonaws.com/'+filename,
+                        file: 'https://testtest.s3.us-east-2.amazonaws.com/' + filename,
                         code: digital,
                         msg: 'Slot booked successfully'
                     });

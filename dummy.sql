@@ -324,3 +324,4 @@ from active_market_place_details as ac
 left join bookings as b on ac.booking_id=b.booking_id 
 where b.on_date IN (select regexp_split_to_table('2020-04-16,2020-04-15,2020-04-17',E',')) 
 group by b.on_date;
+

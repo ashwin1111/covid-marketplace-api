@@ -7,11 +7,6 @@ stat.use(bodyParser.urlencoded({
 }));
 stat.use(bodyParser.json());
 
-
-var bcrypt = require('bcryptjs');
-
-var randomize = require('randomatic');
-
 const pool = require('../db/postgres');
 
 
