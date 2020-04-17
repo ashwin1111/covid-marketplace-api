@@ -1,5 +1,6 @@
 -- use this file to store sql logs like creating a table / view, adding functions, etc..,
-
+--  pg_dump -h ec2-54-152-175-141.compute-1.amazonaws.com -U aquohymxuwciho d7qgqfjkr2g75s > "2020_04_17_db_backup.sql"
+--  pwd: 48c06808b06c6a6596454a0bcbd98549848211dd5757ef2339dcb81b6c22c06c
 -- Heroku Postgres CLI
 -- heroku pg:psql postgresql-convex-88085 --app covid-marketplace
 
@@ -136,7 +137,7 @@ SELECT  mpad.market_place_id,
                 left join count_updates as cu on cu.market_place_id=st.market_place_id AND cu.time_slot_id=st.time_id AND cu.count_on_slot < st.max_cus_count 
                 where st.time_id is NOT NULL AND cu.count_on_slot is NOT NULL) as f ) 
 from market_place_all_details as mpad 
-where mpad.active_check='1' and '2020-04-16' = ANY (string_to_array(mpad.on_dates,',')) and mpad.market_place_id='mpadidmsgwh3';
+where mpad.active_check='1' and '2020-04-17' = ANY (string_to_array(mpad.on_dates,',')) and mpad.market_place_id='mpadidmsgwh3';
 
 
 SELECT  mpad.market_place_id,
@@ -155,7 +156,25 @@ SELECT  mpad.market_place_id,
                 where st.time_id is NOT NULL AND cu.count_on_slot is NOT NULL) as f
                 where f.on_date='2020-04-16')
 from market_place_all_details as mpad 
-where mpad.active_check='1' and '2020-04-16' = ANY (string_to_array(mpad.on_dates,',')) and mpad.market_place_id='mpadidmsgwh3';
+where mpad.active_check='1' and '2020-04-16' = ANY (string_to_array(mpad.on_dates,',')) and mpad.market_place_id='mpadid4spqkn';
+
+SELECT  mpad.market_place_id,
+        mpad.market_palce_name,
+        mpad.market_place_address,
+        '2020-04-16' as on_date,
+        (Select json_agg(json_build_object('id',f.time_slot_id,'time_slot_range', f.time_slot_range))
+        from (SELECT Distinct t.time_slot_id, t.time_slot_range,st.max_cus_count,cu.count_on_slot,cu.on_date
+                from time_slot as t 
+                left join   (select distinct regexp_split_to_table(m.time_slot_ids, E',') as time_id
+                                        ,m.market_place_id as market_place_id
+                                        ,m.customer_max_count as max_cus_count 
+                        from market_place_all_details as m 
+                        where m.market_place_id=mpad.market_place_id) as st On st.time_id = t.time_slot_id 
+                left join count_updates as cu on cu.market_place_id=st.market_place_id AND cu.time_slot_id=st.time_id AND cu.count_on_slot < st.max_cus_count 
+                where st.time_id is NOT NULL AND cu.count_on_slot is NOT NULL) as f
+                where f.on_date='2020-04-16' AND f.time_slot_id is NOT NULL)           
+from market_place_all_details as mpad
+where mpad.active_check='1' and '2020-04-16' = ANY (string_to_array(mpad.on_dates,','));
 
 --booking query:
 
@@ -295,3 +314,13 @@ where m.market_license_number IN (SELECT market_license_number
                                  from market_place_all_details 
                                  where '2020-04-16' = ANY (string_to_array(on_dates,','))) ;
 -- group by m.market_place_id;
+
+--daily counts:
+
+select  count(b.*) as booked_count,
+        count(ac.*) as visited_count,
+        b.on_date 
+from active_market_place_details as ac 
+left join bookings as b on ac.booking_id=b.booking_id 
+where b.on_date IN (select regexp_split_to_table('2020-04-16,2020-04-15,2020-04-17',E',')) 
+group by b.on_date;
