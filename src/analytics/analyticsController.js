@@ -9,19 +9,19 @@ stat.use(bodyParser.json());
 
 const pool = require('../db/postgres');
 
-stat.get('/get_date_counts', async function (req, res) {
-    if (!req.query.on_date) {
+
+stat.get('/get_date_counts' ,async function (req, res){
+    if ( !req.query.on_date){
         return res.status(403).send({
             msg: "Bad payload"
         });
     }
-
     const client = await pool().connect();
     await client.query(`Select  m.market_place_id,
                             m.market_palce_name,
                             m.market_place_address,
-                            (Select json_agg(json_build_object('id',f.time_slot_id,'time_slot_range', f.time_slot_range))
-                            from time_slot as f where f.time_slot_id in (SELECT regexp_split_to_table(m.time_slot_ids, E','))) as time_slot_data,
+                            (Select json_agg(json_build_object('id',f.time_slot_id,'time_slot_range', f.time_slot_range,'remaining_booking_count',m.customer_max_count-cu.count_on_slot))
+                            from time_slot as f left join count_updates as cu ON cu.time_slot_id = f.time_slot_id where f.time_slot_id in (SELECT regexp_split_to_table(m.time_slot_ids, E',')) AND cu.market_place_id=m.market_place_id) as time_slot_data,
                             m.customer_max_count,
                             (select count(*) 
                             from active_market_place_details as a 
@@ -33,7 +33,7 @@ stat.get('/get_date_counts', async function (req, res) {
                         from market_place_all_details as m 
                         where m.market_license_number IN (SELECT market_license_number 
                                                     from market_place_all_details 
-                                                    where $1 = ANY (string_to_array(on_dates,','))) ;`, [req.query.on_date], async function (err, result) {
+                                                    where $1 = ANY (string_to_array(on_dates,','))) ;`,[req.query.on_date] ,async function (err, result) {
         if (err) {
             console.log('err in retreaving marketplaces', err);
             return res.status(500).send({
@@ -53,5 +53,64 @@ stat.get('/get_date_counts', async function (req, res) {
     });
     client.release();
 });
+
+
+stat.get('/get_daily_counts' ,async function (req, res){
+    if ( !req.query.on_date){
+        return res.status(403).send({
+            msg: "Bad payload"
+        });
+    }
+    var startDate = new Date("2020-04-15"); //YYYY-MM-DD
+    var endDate = new Date(req.query.on_date); //YYYY-MM-DD
+
+    var getDateArray = function(start, end) {
+        var arr = new Array();
+        var dt = new Date(start);
+        while (dt <= end) {
+            var date=new Date(dt);
+            var d = date.getDate();
+            var m = date.getMonth() + 1;
+            var y = date.getFullYear();
+
+            var dateString =  y + '-' + (m <= 9 ? '0' + m : m) + '-' +(d <= 9 ? '0' + d : d);
+
+            arr.push(dateString);
+            dt.setDate(dt.getDate() + 1);
+        }
+        return arr;
+    }
+    var dateArr = getDateArray(startDate, endDate);
+    console.log(dateArr.toString());
+    const client = await pool().connect();
+    await client.query(`select  count(b.*) as booked_count,
+                                count(ac.*) as visited_count,
+                                b.on_date 
+                        from active_market_place_details as ac 
+                        left join bookings as b on ac.booking_id=b.booking_id 
+                        where b.on_date IN (select regexp_split_to_table($1,E',')) 
+                        group by b.on_date ;`,[dateArr.toString()] ,async function (err, result) {
+        if (err) {
+            console.log('err in retreaving booking counts', err);
+            return res.status(500).send({
+                msg: 'Internal error / Bad payload'
+            })
+        } else {
+            if (!result.rows[0]) {
+                return res.status(200).send({
+                    msg: "No Bookings till now"
+                })
+            } else {
+                return res.status(200).send({
+                    Daily_data: result.rows
+                });
+            }
+        }
+    });
+    client.release();
+});
+
+
+
 
 module.exports = stat;
