@@ -61,7 +61,11 @@ stat.get('/get_daily_counts' ,async function (req, res){
             msg: "Bad payload"
         });
     }
+<<<<<<< HEAD
     var startDate = new Date("2020-04-16"); //YYYY-MM-DD
+=======
+    var startDate = new Date("2020-04-15"); //YYYY-MM-DD
+>>>>>>> master
     var endDate = new Date(req.query.on_date); //YYYY-MM-DD
 
     var getDateArray = function(start, end) {
@@ -84,6 +88,7 @@ stat.get('/get_daily_counts' ,async function (req, res){
     console.log(dateArr.toString());
     const client = await pool().connect();
     await client.query(`select  count(b.*) as booked_count,
+<<<<<<< HEAD
                                 (select count(*) 
                                 from active_market_place_details 
                                 where booking_id IN     (select booking_id 
@@ -93,6 +98,14 @@ stat.get('/get_daily_counts' ,async function (req, res){
                         from bookings as b 
                         where b.on_date in (select regexp_split_to_table($1,E',')) 
                         group by b.on_date;`,[dateArr.toString()] ,async function (err, result) {
+=======
+                                count(ac.*) as visited_count,
+                                b.on_date 
+                        from active_market_place_details as ac 
+                        left join bookings as b on ac.booking_id=b.booking_id 
+                        where b.on_date IN (select regexp_split_to_table($1,E',')) 
+                        group by b.on_date ;`,[dateArr.toString()] ,async function (err, result) {
+>>>>>>> master
         if (err) {
             console.log('err in retreaving booking counts', err);
             return res.status(500).send({
@@ -104,6 +117,7 @@ stat.get('/get_daily_counts' ,async function (req, res){
                     msg: "No Bookings till now"
                 })
             } else {
+<<<<<<< HEAD
                 db_date=[]
                 for (var i=0;i<result.rowCount;i++){
                     // console.log(result.rows[i].on_date,"e",dateArr.indexOf(result.rows[i].on_date));
@@ -138,6 +152,8 @@ stat.get('/get_daily_counts' ,async function (req, res){
                 //         };
                 //         data.push(form);
                 //     }
+=======
+>>>>>>> master
                 return res.status(200).send({
                     Daily_data: result.rows
                 });
