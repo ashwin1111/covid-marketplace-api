@@ -317,7 +317,20 @@ where m.market_license_number IN (SELECT market_license_number
 
 --daily counts:
 
+-- conflicts, idk which one to remove
 select  count(b.*) as booked_count,
+================================================
+        (select count(*) 
+        from active_market_place_details 
+        where booking_id IN     (select booking_id 
+                                from bookings 
+                                where on_date =b.on_date)) as visited_count,
+        b.on_date 
+from bookings as b 
+where b.on_date in (select regexp_split_to_table('2020-04-16,2020-04-15,2020-04-17',E',')) 
+group by b.on_date;
+
+==========================================
         count(ac.*) as visited_count,
         b.on_date 
 from active_market_place_details as ac 
