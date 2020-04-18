@@ -92,7 +92,7 @@ update customer_cred SET verified = 'otp_pending' where verified ='0';
 
 insert into admin_cred values('aid3ijnuw', 'COVID-19' ,'$2a$08$VQOpb70ElK9339vW5.tGuelKZtCzkwIt7zm7jOex6eQ8Y92G9GD62',now()); -- password: 'covid-market-19' userid: 'aid3ijnuw'
 
-INSERT INTO time_slot VALUES ('mpidvhclme','9 AM to 9:30 AM',now()),('mpidd2g6f8','9:30 AM to 10 AM',now()),('mpidblijzd','10 AM to 10:30 AM',now()),('mpidkv1mfa','10:30 AM to 11 AM',now()),('mpidtbbnsm','11 AM to 11:30 AM',now());
+INSERT INTO time_slot VALUES ('1','9 AM to 9:30 AM',now()),('2','9:30 AM to 10 AM',now()),('3','10 AM to 10:30 AM',now()),('4','10:30 AM to 11 AM',now()),('5','11 AM to 11:30 AM',now()),('6','11:30 AM to 12 AM',now()),('7','12 PM to 12:30 PM',now()),('8','12:30 PM to 1 PM',now());
 
 
 INSERT INTO count_updates (count_update_id,market_place_id,time_slot_id,count,created_at) values('cuidywhnl2','mpadidjhsdvf','mpidvhclme',0,now()),('cuidpz4s44','mpadidjhsdvf','mpidd2g6f8',0,now()),('cuid7ch7gk','mpadidjhsdvf','mpidblijzd',0,now()),('cuid4bc1jb','mpadidjhsdvf','mpidkv1mfa',0,now()),('cuid57s1d0','mpadidjhsdvf','mpidtbbnsm',0,now()),('cuidqq7pr1','mpadidb40mu2','mpidvhclme',0,now()),('cuid4fespw','mpadidb40mu2','mpidd2g6f8',0,now()),('cuidd45ss3','mpadidb40mu2','mpidblijzd',0,now()),('cuid1qz921','mpadidb40mu2','mpidkv1mfa',0,now());
@@ -300,7 +300,7 @@ Select  m.market_place_id,
         m.market_palce_name,
         m.market_place_address,
         (Select json_agg(json_build_object('id',f.time_slot_id,'time_slot_range', f.time_slot_range,'remaining_booking_count',m.customer_max_count-cu.count_on_slot))
-        from time_slot as f left join count_updates as cu ON cu.time_slot_id = f.time_slot_id where f.time_slot_id in (SELECT regexp_split_to_table(m.time_slot_ids, E',')) AND cu.market_place_id=m.market_place_id) as time_slot_data,
+        from time_slot as f left join count_updates as cu ON cu.time_slot_id = f.time_slot_id where f.time_slot_id in (SELECT regexp_split_to_table(m.time_slot_ids, E',')) AND cu.market_place_id=m.market_place_id AND cu.on_date='2020-04-18') as time_slot_data,
         m.customer_max_count,
         (select count(*) 
         from active_market_place_details as a 
@@ -308,11 +308,11 @@ Select  m.market_place_id,
         (select count(*) 
         from active_market_place_details as a 
         where a.active_market_palce_id=m.market_place_id AND a.exit_time is null) as present_people,
-        '2020-04-16' as date  
+        '2020-04-18' as date  
 from market_place_all_details as m 
 where m.market_license_number IN (SELECT market_license_number 
                                  from market_place_all_details 
-                                 where '2020-04-16' = ANY (string_to_array(on_dates,','))) ;
+                                 where '2020-04-18' = ANY (string_to_array(on_dates,','))) ;
 -- group by m.market_place_id;
 
 --daily counts:
@@ -328,5 +328,18 @@ select  count(b.*) as booked_count,
 from bookings as b 
 where b.on_date in (select regexp_split_to_table('2020-04-16,2020-04-15,2020-04-17',E',')) 
 group by b.on_date;
+
+---truncate queries:
+
+TRUNCATE customer_cred CASCADE;
+TRUNCATE market_place_all_details CASCADE;
+TRUNCATE bookings;
+TRUNCATE active_market_place_details;
+TRUNCATE count_updates;
+TRUNCATE resend_otp;
+TRUNCATE time_slot;
+
+ALTER Table market_place_all_details ALTER COLUMN market_license_number SET NOT NULL;
+INSERT INTO time_slot VALUES ('1','9 AM to 9:30 AM',now()),('2','9:30 AM to 10 AM',now()),('3','10 AM to 10:30 AM',now()),('4','10:30 AM to 11 AM',now()),('5','11 AM to 11:30 AM',now()),('6','11:30 AM to 12 AM',now()),('7','12 PM to 12:30 PM',now()),('8','12:30 PM to 1 PM',now());
 
 
