@@ -49,7 +49,7 @@ admin.post('/AdminLogin', async function (req, res) {
                 var token = jwt.sign({
                     id: result.rows[0].admin_id,
                     name: result.rows[0].admin_user_name
-                }, process.env.jwtSecret, {
+                }, process.env.jwtAdminSecret, {
                     expiresIn: 172800
                 });
 
