@@ -110,7 +110,7 @@ router.post('/login', async function (req, res) {
                         id: result.rows[0].customer_id,
                         email: result.rows[0].customer_email
                     }, process.env.jwtSecret, {
-                        expiresIn: 604800
+                        expiresIn: 86400000*15 // 15 days
                     });
 
                     var data = {

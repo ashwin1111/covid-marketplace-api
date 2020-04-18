@@ -13,7 +13,7 @@ function verifyToken(req, res, next) {
             message: 'No token provided.'
         });
 
-    jwt.verify(token, process.env.jwtSecret, function (err, decoded) {
+    jwt.verify(token, process.env.jwtAdminSecret, function (err, decoded) {
         if (err && err.name === 'TokenExpiredError') {
             return res.status(200).send({
                 auth: true,

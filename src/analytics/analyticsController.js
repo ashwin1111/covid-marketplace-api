@@ -80,8 +80,8 @@ stat.get('/get_daily_counts' ,async function (req, res){
         }
         return arr;
     }
+
     var dateArr = getDateArray(startDate, endDate);
-    console.log(dateArr.toString());
     const client = await pool().connect();
     await client.query(`select  count(b.*) as booked_count,
                                 (select count(*) 
@@ -106,14 +106,10 @@ stat.get('/get_daily_counts' ,async function (req, res){
             } else {
                 db_date=[]
                 for (var i=0;i<result.rowCount;i++){
-                    // console.log(result.rows[i].on_date,"e",dateArr.indexOf(result.rows[i].on_date));
                     db_date.push(result.rows[i].on_date);
                 }
-                console.log(db_date);
+
                 var missing_date= dateArr.filter(x => db_date.indexOf(x) === -1);
-                console.log("miss",missing_date);
-                // var total_data = [];
-                // total_data.push(result.rows);
                 for (var h=0;h<missing_date.length;h++){
                     var form={
                         booked_count: "0",
