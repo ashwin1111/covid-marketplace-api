@@ -110,13 +110,14 @@ router.post('/login', async function (req, res) {
                         id: result.rows[0].customer_id,
                         email: result.rows[0].customer_email
                     }, process.env.jwtSecret, {
-                        expiresIn: 604800
+                        expiresIn: 86400000*15 // 15 days
                     });
 
                     var data = {
                         name: result.rows[0].customer_name,
                         phno: result.rows[0].customer_phone,
-                        aadhar: result.rows[0].customer_aadhar_num
+                        aadhar: result.rows[0].customer_aadhar_num,
+                        email: result.rows[0].customer_email
                     };
 
                     return res.status(200).send({
@@ -154,7 +155,6 @@ router.post('/verify', async function (req, res) {
 
             if (result.rows[0]) {
                 if (new Date(result.rows[0].expiry_time).toUTCString() > new Date().toUTCString()) {
-                    console.log('not expired');
                     await client.query('update customer_cred set verified = $1 where customer_id = $2', ['verified', result.rows[0].customer_id], async function (err, result) {
                         if (err) {
                             console.log('err in updating user to verified', err);
