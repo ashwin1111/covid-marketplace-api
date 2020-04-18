@@ -24,14 +24,16 @@ stat.get('/get_date_counts' ,async function (req, res){
                             from time_slot as f left join count_updates as cu ON cu.time_slot_id = f.time_slot_id where f.time_slot_id in (SELECT regexp_split_to_table(m.time_slot_ids, E',')) AND cu.market_place_id=m.market_place_id AND cu.on_date=$1) as time_slot_data,
                             m.customer_max_count,
                             (select count(*) 
-                            from active_market_place_details as a 
-                            where a.active_market_palce_id=m.market_place_id AND a.exit_time is not null) as visited_people,
+                            from active_market_place_details 
+                            where booking_id IN (select booking_id 
+                                                from bookings where on_date=$1 and booking_market_place_id=m.market_place_id) and exit_time is not null) as visited_people,
                             (select count(*) 
-                            from active_market_place_details as a 
-                            where a.active_market_palce_id=m.market_place_id AND a.exit_time is null) as present_people,
+                            from active_market_place_details 
+                            where booking_id IN (select booking_id 
+                                                from bookings where on_date=$1 and booking_market_place_id=m.market_place_id) and exit_time is null) as present_people,
                             $1 as date  
                         from market_place_all_details as m 
-                        where m.market_license_number IN (SELECT market_license_number 
+                        where m.market_place_id IN (SELECT market_place_id  
                                                     from market_place_all_details 
                                                     where $1 = ANY (string_to_array(on_dates,','))) ;`,[req.query.on_date] ,async function (err, result) {
         if (err) {
@@ -45,6 +47,11 @@ stat.get('/get_date_counts' ,async function (req, res){
                     msg: "No Market details found for Today"
                 })
             } else {
+                for(var y=0;y<result.rowCount;y++){
+                    var take = result.rows[y].time_slot_data;
+                    take.sort((a , b)=> a.id - b.id);
+                    result.rows[y].time_slot_data=take;
+                }
                 return res.status(200).send({
                     DateWise_data: result.rows
                 });
@@ -53,6 +60,7 @@ stat.get('/get_date_counts' ,async function (req, res){
     });
     client.release();
 });
+
 
 
 stat.get('/get_daily_counts' ,async function (req, res){
@@ -80,7 +88,7 @@ stat.get('/get_daily_counts' ,async function (req, res){
         }
         return arr;
     }
-
+    
     var dateArr = getDateArray(startDate, endDate);
     const client = await pool().connect();
     await client.query(`select  count(b.*) as booked_count,
@@ -93,6 +101,7 @@ stat.get('/get_daily_counts' ,async function (req, res){
                         from bookings as b 
                         where b.on_date in (select regexp_split_to_table($1,E',')) 
                         group by b.on_date;`,[dateArr.toString()] ,async function (err, result) {
+
         if (err) {
             console.log('err in retreaving booking counts', err);
             return res.status(500).send({
@@ -123,6 +132,7 @@ stat.get('/get_daily_counts' ,async function (req, res){
                 });
             }
         }
+        
     });
     client.release();
 });
