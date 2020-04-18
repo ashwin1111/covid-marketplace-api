@@ -104,20 +104,20 @@ stat.get('/get_daily_counts' ,async function (req, res){
                     msg: "No Bookings till now"
                 })
             } else {
-                db_date=[]
-                for (var i=0;i<result.rowCount;i++){
-                    db_date.push(result.rows[i].on_date);
-                }
+                // db_date=[]
+                // for (var i=0;i<result.rowCount;i++){
+                //     db_date.push(result.rows[i].on_date);
+                // }
 
-                var missing_date= dateArr.filter(x => db_date.indexOf(x) === -1);
-                for (var h=0;h<missing_date.length;h++){
-                    var form={
-                        booked_count: "0",
-                        visited_count: "0",
-                        on_date: missing_date[h].toString()
-                    };
-                    result.rows.push(form);
-                }
+                // var missing_date= dateArr.filter(x => db_date.indexOf(x) === -1);
+                // for (var h=0;h<missing_date.length;h++){
+                //     var form={
+                //         booked_count: "0",
+                //         visited_count: "0",
+                //         on_date: missing_date[h].toString()
+                //     };
+                //     result.rows.push(form);
+                // }
                 return res.status(200).send({
                     Daily_data: result.rows
                 });
