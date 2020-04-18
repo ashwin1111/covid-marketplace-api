@@ -303,16 +303,18 @@ Select  m.market_place_id,
         from time_slot as f left join count_updates as cu ON cu.time_slot_id = f.time_slot_id where f.time_slot_id in (SELECT regexp_split_to_table(m.time_slot_ids, E',')) AND cu.market_place_id=m.market_place_id AND cu.on_date='2020-04-18') as time_slot_data,
         m.customer_max_count,
         (select count(*) 
-        from active_market_place_details as a 
-        where a.active_market_palce_id=m.market_place_id AND a.exit_time is not null) as visited_people,
+        from active_market_place_details 
+        where booking_id IN (select booking_id 
+                        from bookings where on_date='2020-04-18' and booking_market_place_id=m.market_place_id) and exit_time is not null) as visited_people,
         (select count(*) 
-        from active_market_place_details as a 
-        where a.active_market_palce_id=m.market_place_id AND a.exit_time is null) as present_people,
+        from active_market_place_details 
+        where booking_id IN (select booking_id 
+                        from bookings where on_date='2020-04-18' and booking_market_place_id=m.market_place_id) and exit_time is null) as present_people,
         '2020-04-18' as date  
 from market_place_all_details as m 
-where m.market_license_number IN (SELECT market_license_number 
+where m.market_place_id IN (SELECT market_place_id 
                                  from market_place_all_details 
-                                 where '2020-04-18' = ANY (string_to_array(on_dates,','))) ;
+                                 where '2020-04-18' = ANY (string_to_array(on_dates,',')));
 -- group by m.market_place_id;
 
 --daily counts:

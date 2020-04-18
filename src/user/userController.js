@@ -161,6 +161,7 @@ user.get('/booking_history', jwtToken, async function (req, res) {
                     msg: "No Market-Place details found with the active status"
                 })
             } else {
+                result.rows.sort((a, b) => new Date(a.on_date).getTime() - new Date(b.on_date).getTime() || a.booking_time_slot_id - b.booking_time_slot_id);
                 return res.status(200).send({
                     marketPlaces: result.rows
                 });
