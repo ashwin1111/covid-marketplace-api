@@ -346,3 +346,16 @@ ALTER Table market_place_all_details ALTER COLUMN market_license_number SET NOT 
 INSERT INTO time_slot VALUES ('1','9 AM to 9:30 AM',now()),('2','9:30 AM to 10 AM',now()),('3','10 AM to 10:30 AM',now()),('4','10:30 AM to 11 AM',now()),('5','11 AM to 11:30 AM',now()),('6','11:30 AM to 12 AM',now()),('7','12 PM to 12:30 PM',now()),('8','12:30 PM to 1 PM',now());
 
 
+---get_time_slots_on_date
+
+select  count(market_license_number) as market_count,
+        (SELECT max(v.time_slot_ids) as last_time_slot 
+        FROM    (select regexp_split_to_table(time_slot_ids,',') as time_slot_ids 
+                from market_place_all_details 
+                where '2020-04-19' = ANY (string_to_array(on_dates,','))) as v),
+        (SELECT min(v.time_slot_ids) as first_time_slot 
+        FROM    (select regexp_split_to_table(time_slot_ids,',') as time_slot_ids 
+                from market_place_all_details 
+                where '2020-04-19' = ANY (string_to_array(on_dates,','))) as v) 
+from market_place_all_details as m 
+where '2020-04-19' = ANY (string_to_array(m.on_dates,','));

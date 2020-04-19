@@ -140,7 +140,43 @@ stat.get('/get_daily_counts' ,async function (req, res){
     client.release();
 });
 
-
+stat.get('/get_time_slots_on_date' ,async function (req, res){
+    if ( !req.query.on_date){
+        return res.status(403).send({
+            msg: "Bad payload"
+        });
+    }
+    const client = await pool().connect();
+    await client.query(`select  count(market_license_number) as market_count,
+                                (SELECT max(v.time_slot_ids) as last_time_slot 
+                                FROM    (select regexp_split_to_table(time_slot_ids,',') as time_slot_ids 
+                                        from market_place_all_details 
+                                        where $1 = ANY (string_to_array(on_dates,','))) as v),
+                                (SELECT min(v.time_slot_ids) as first_time_slot 
+                                FROM    (select regexp_split_to_table(time_slot_ids,',') as time_slot_ids 
+                                        from market_place_all_details 
+                                        where $1 = ANY (string_to_array(on_dates,','))) as v) 
+                        from market_place_all_details as m 
+                        where $1 = ANY (string_to_array(m.on_dates,',')) ;`,[req.query.on_date] ,async function (err, result) {
+        if (err) {
+            console.log('err in time_slots on date', err);
+            return res.status(500).send({
+                msg: 'Internal error / Bad payload'
+            })
+        } else {
+            if (!result.rows[0]) {
+                return res.status(200).send({
+                    msg: "No Market is functioning for Today"
+                })
+            } else {
+                return res.status(200).send({
+                    DateWise_count_data: result.rows
+                });
+            }
+        }
+    });
+    client.release();
+});
 
 
 module.exports = stat;
