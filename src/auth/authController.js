@@ -52,7 +52,7 @@ router.post('/register', async function (req, res) {
             var otp = await randomize('0', 6);
             id = 'cid' + id;
             client.query(`INSERT INTO customer_cred (customer_id, customer_name, customer_email, customer_password, created_at, customer_phone, customer_aadhar_num, verified, otp, expiry_time) 
-            VALUES ($1, $2, $3, $4, now(), $5, $6, $7, $8, now() + INTERVAL '3 minute')`, [id, req.body.name, req.body.email, pwd, req.body.phno, req.body.aadhar, 'otp_pending', otp], function (err, result) {
+            VALUES ($1, $2, $3, $4, now(), $5, $6, $7, $8, now() + INTERVAL '3 minute')`, [id, req.body.name, req.body.email, pwd, req.body.phno, req.body.aadhar, 'verified', otp], function (err, result) {
                 if (err) {
                     console.log('err in registering user', err);
                     return res.status(500).send({
@@ -61,8 +61,8 @@ router.post('/register', async function (req, res) {
                 } else {
                     // TODO: discuss add when necessary
                     // sendEmail(req.body.name, id, req.body.email);
-                    let msg = '\nHi ' + req.body.name + ', please enter this 6 digit OTP ' + otp + ' in the application to get your account verified\n';
-                    sendOtp(req.body.phno, msg);
+                    // let msg = '\nHi ' + req.body.name + ', please enter this 6 digit OTP ' + otp + ' in the application to get your account verified\n';
+                    // sendOtp(req.body.phno, msg);
                     return res.status(200).send({
                         msg: 'User registered successfully'
                     });
